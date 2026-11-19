@@ -490,7 +490,7 @@ GtkWidget *build_sidebar_widget(AppState *state)
     gtk_box_append(GTK_BOX(sidebar_box), brand_icon);
     GtkWidget *sw = gtk_scrolled_window_new();
     gtk_widget_add_css_class(sw, "sidebar-scroll");
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sw), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sw), GTK_POLICY_NEVER, GTK_POLICY_EXTERNAL);
     gtk_widget_set_vexpand(sw, TRUE);
     GtkWidget *places_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     gtk_widget_set_halign(places_box, GTK_ALIGN_CENTER);

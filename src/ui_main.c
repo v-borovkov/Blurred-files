@@ -62,47 +62,53 @@ static gboolean detect_resize_edge(GtkWidget *window, double x, double y, GdkSur
     return FALSE;
 }
 
-
-static const char *cursor_name_for_edge(GdkSurfaceEdge edge) {
-    switch (edge) {
-        case GDK_SURFACE_EDGE_NORTH_WEST:
-        case GDK_SURFACE_EDGE_SOUTH_EAST:
-            return "nwse-resize";
-        case GDK_SURFACE_EDGE_NORTH_EAST:
-        case GDK_SURFACE_EDGE_SOUTH_WEST:
-            return "nesw-resize";
-        case GDK_SURFACE_EDGE_WEST:
-        case GDK_SURFACE_EDGE_EAST:
-            return "ew-resize";
-        case GDK_SURFACE_EDGE_NORTH:
-        case GDK_SURFACE_EDGE_SOUTH:
-            return "ns-resize";
-        default:
-            return "default";
+static const char *cursor_name_for_edge(GdkSurfaceEdge edge)
+{
+    switch (edge)
+    {
+    case GDK_SURFACE_EDGE_NORTH_WEST:
+    case GDK_SURFACE_EDGE_SOUTH_EAST:
+        return "nwse-resize";
+    case GDK_SURFACE_EDGE_NORTH_EAST:
+    case GDK_SURFACE_EDGE_SOUTH_WEST:
+        return "nesw-resize";
+    case GDK_SURFACE_EDGE_WEST:
+    case GDK_SURFACE_EDGE_EAST:
+        return "ew-resize";
+    case GDK_SURFACE_EDGE_NORTH:
+    case GDK_SURFACE_EDGE_SOUTH:
+        return "ns-resize";
+    default:
+        return "default";
     }
 }
 
 static GtkWidget *last_resize_hovered_widget = NULL;
 
-static void on_window_pointer_motion(GtkEventControllerMotion *controller, double x, double y, gpointer user_data) {
+static void on_window_pointer_motion(GtkEventControllerMotion *controller, double x, double y, gpointer user_data)
+{
     (void)controller;
     GtkWidget *overlay = GTK_WIDGET(user_data);
     GtkWidget *window = gtk_widget_get_ancestor(overlay, GTK_TYPE_WINDOW);
-    if (!window) return;
+    if (!window)
+        return;
 
     graphene_point_t pt_in = GRAPHENE_POINT_INIT((float)x, (float)y);
     graphene_point_t pt_win;
-    if (!gtk_widget_compute_point(overlay, window, &pt_in, &pt_win)) {
+    if (!gtk_widget_compute_point(overlay, window, &pt_in, &pt_win))
+    {
         pt_win = pt_in;
     }
 
     GtkWidget *picked = gtk_widget_pick(overlay, x, y, GTK_PICK_DEFAULT);
     GdkSurfaceEdge edge;
 
-    if (detect_resize_edge(window, pt_win.x, pt_win.y, &edge)) {
+    if (detect_resize_edge(window, pt_win.x, pt_win.y, &edge))
+    {
         const char *cname = cursor_name_for_edge(edge);
 
-        if (last_resize_hovered_widget && last_resize_hovered_widget != picked) {
+        if (last_resize_hovered_widget && last_resize_hovered_widget != picked)
+        {
             gtk_widget_set_cursor_from_name(last_resize_hovered_widget, NULL);
             g_clear_weak_pointer(&last_resize_hovered_widget);
         }
@@ -110,12 +116,16 @@ static void on_window_pointer_motion(GtkEventControllerMotion *controller, doubl
         gtk_widget_set_cursor_from_name(window, cname);
         gtk_widget_set_cursor_from_name(overlay, cname);
 
-        if (picked && GTK_IS_WIDGET(picked)) {
+        if (picked && GTK_IS_WIDGET(picked))
+        {
             gtk_widget_set_cursor_from_name(picked, cname);
             g_set_weak_pointer(&last_resize_hovered_widget, picked);
         }
-    } else {
-        if (last_resize_hovered_widget) {
+    }
+    else
+    {
+        if (last_resize_hovered_widget)
+        {
             gtk_widget_set_cursor_from_name(last_resize_hovered_widget, NULL);
             g_clear_weak_pointer(&last_resize_hovered_widget);
         }

@@ -17,7 +17,7 @@ window.solid-csd {
 /* --- Left Translucent Sidebar --- */
 .sidebar-controls {
     background: transparent;
-    padding: 36px 8px 34px 10px;
+    padding: 36px 8px 48px 10px;
 }
 
 .sidebar-brand {
@@ -77,10 +77,13 @@ button.sidebar-btn.drop-target-hover {
     margin-bottom: 2px;
 }
 
+scrolledwindow.sidebar-scroll scrollbar,
+scrolledwindow.sidebar-scroll scrollbar trough,
 scrolledwindow.sidebar-scroll scrollbar slider {
-    background-color: rgba(255, 255, 255, 0.18);
-    border-radius: 999px;
-    min-width: 4px;
+    opacity: 0;
+    min-width: 0;
+    min-height: 0;
+    background: transparent;
 }
 
 scrolledwindow.sidebar-scroll scrollbar slider:hover {
@@ -613,4 +616,19 @@ button.modal-secondary-btn {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     margin-left: -1px;
+}
+
+/* Keep content scrollbar inside the superellipse border & away from resize edge */
+.content-controls scrolledwindow {
+    margin-right: 16px;
+}
+
+.content-controls scrolledwindow scrollbar.vertical slider {
+    background-color: rgba(120, 142, 174, 0.35);
+    border-radius: 999px;
+    min-width: 5px;
+}
+
+.content-controls scrolledwindow scrollbar.vertical slider:hover {
+    background-color: rgba(255, 107, 0, 0.65);
 }
