@@ -2,6 +2,8 @@
 
 A fast, lightweight GTK4 file manager written in C from scratch, featuring a custom superellipse window silhouette, translucent Wayfire-blurred sidebar, and tactile Neumorphic header controls.
 
+![Blurred Files Preview](screenshots/preview.png)
+
 ---
 
 ## Features
