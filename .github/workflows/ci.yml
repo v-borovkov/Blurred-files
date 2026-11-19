@@ -1,0 +1,27 @@
+name: Build & Automated Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install GTK4 build & Xvfb test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-4-dev xvfb zip unzip tar
+
+      - name: Compile application
+        run: make -j$(nproc)
+
+      - name: Run automated GTest + ASan suite
+        run: make test
+        

@@ -396,17 +396,26 @@ void rebuild_sidebar_places(AppState *state)
                                                        NULL));
         }
     }
-    /* User-Pinned Favorite Folders (Folder Icon) */
-    for (GList *l = state->pinned_folders; l != NULL; l = l->next)
-    {
+   /* User-Pinned Favorite Folders (Skipping built-in Home / XDG places) */
+    for (GList *l = state->pinned_folders; l != NULL; l = l->next) {
         const char *pin_path = (const char *)l->data;
-        if (g_file_test(pin_path, G_FILE_TEST_IS_DIR))
-        {
-            char *base = g_path_get_basename(pin_path);
-            gtk_box_append(GTK_BOX(state->sidebar_places_box),
-                           create_sidebar_place_button(state, base, "folder-symbolic", NULL, pin_path, NULL, NULL));
-            g_free(base);
+        if (!g_file_test(pin_path, G_FILE_TEST_IS_DIR)) continue;
+        if (g_strcmp0(pin_path, home_dir) == 0) continue;
+
+        gboolean is_xdg_builtin = FALSE;
+        for (guint i = 0; i < G_N_ELEMENTS(xdg_places); i++) {
+            const char *xdg_p = g_get_user_special_dir(xdg_places[i].dir_enum);
+            if (xdg_p && g_strcmp0(pin_path, xdg_p) == 0) {
+                is_xdg_builtin = TRUE;
+                break;
+            }
         }
+        if (is_xdg_builtin) continue;
+
+        char *base = g_path_get_basename(pin_path);
+        gtk_box_append(GTK_BOX(state->sidebar_places_box),
+                       create_sidebar_place_button(state, base, "folder-symbolic", NULL, pin_path, NULL, NULL));
+        g_free(base);
     }
     /* External Volumes & Mounted Drives */
     if (state->vol_monitor)
