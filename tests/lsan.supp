@@ -1,0 +1,5 @@
+leak:libfontconfig
+leak:libglib-2.0
+leak:libgobject-2.0
+leak:libgtk-4
+leak:libpango

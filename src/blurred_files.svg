@@ -1,0 +1,62 @@
+<svg xmlns="http://w3.org" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff6b00"/>
+      <stop offset="100%" stop-color="#ff8c24"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98"/>
+      <stop offset="100%" stop-color="#f1f3f5" stop-opacity="0.94"/>
+    </linearGradient>
+    <filter id="dropShadow" x="-15%" y="-15%" width="130%" height="135%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000000" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <!-- Superellipse Outer Squircle Base -->
+  <path d="M 64 8
+           C 104 8, 120 24, 120 64
+           C 120 104, 104 120, 64 120
+           C 24 120, 8 104, 8 64
+           C 8 24, 24 8, 64 8 Z"
+        fill="url(#bgGrad)"/>
+
+  <!-- Subtle Inner Rim Highlight -->
+  <path d="M 64 9.5
+           C 103 9.5, 118.5 25, 118.5 64
+           C 118.5 103, 103 118.5, 64 118.5
+           C 25 118.5, 9.5 103, 9.5 64
+           C 9.5 25, 25 9.5, 64 9.5 Z"
+        fill="none" stroke="#ffffff" stroke-opacity="0.28" stroke-width="1.5"/>
+
+  <!-- Frosted Folder Silhouette -->
+  <g filter="url(#dropShadow)">
+    <!-- Folder Back Tab -->
+    <path d="M 28 42
+             C 28 36, 32 32, 38 32
+             L 53 32
+             C 56 32, 58 34, 60 37
+             L 63 41
+             L 90 41
+             C 96 41, 100 45, 100 51
+             L 100 84
+             C 100 91, 95 96, 88 96
+             L 40 96
+             C 33 96, 28 91, 28 84 Z"
+          fill="#242424" fill-opacity="0.88"/>
+
+    <!-- Frosted Front Folder Body -->
+    <rect x="28" y="48" width="72" height="48" rx="12" ry="12" fill="url(#cardGrad)"/>
+
+    <!-- Dark Sidebar Accent Pill Inside Folder -->
+    <rect x="35" y="56" width="12" height="32" rx="6" ry="6" fill="#242424"/>
+    <circle cx="41" cy="64" r="2.2" fill="#ff6b00"/>
+    <circle cx="41" cy="72" r="2.2" fill="#ffffff" fill-opacity="0.55"/>
+    <circle cx="41" cy="80" r="2.2" fill="#ffffff" fill-opacity="0.55"/>
+
+    <!-- Minimalist File Lines -->
+    <rect x="54" y="61" width="36" height="5" rx="2.5" fill="#cbd5e1"/>
+    <rect x="54" y="71" width="26" height="5" rx="2.5" fill="#cbd5e1"/>
+    <rect x="54" y="81" width="31" height="5" rx="2.5" fill="#ff6b00" fill-opacity="0.85"/>
+  </g>
+</svg>

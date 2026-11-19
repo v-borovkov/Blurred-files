@@ -1,0 +1,16 @@
+# Compiled binaries & object files
+build/
+*.o
+
+# Generated Debian & RPM packages (upload these to GitHub Releases instead)
+*.deb
+*.rpm
+pkg_deb/
+rpmbuild/
+
+# Editor & temporary files
+*~
+*.swp
+*.bak
+.vscode/
+.idea//blurred_files

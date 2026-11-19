@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Blurred Files
+GenericName=File Manager
+Comment=Custom Superellipse Wayland File Manager
+Exec=env GTK_A11Y=none blurred_files %U
+Icon=blurred_files
+Terminal=false
+Type=Application
+Categories=System;FileManager;Utility;
+MimeType=inode/directory;
+StartupNotify=true
