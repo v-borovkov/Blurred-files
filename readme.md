@@ -2,6 +2,8 @@
 
 A fast, lightweight GTK4 file manager written in C from scratch, featuring a custom superellipse window silhouette, translucent Wayfire-blurred sidebar, and tactile Neumorphic header controls.
 
+> **Note:** Blurred Files is currently in **beta**. While core file operations and automated tests are in place, please report any compositor-specific quirks or edge cases via GitHub Issues.
+
 ![Blurred Files Preview](screenshots/preview.png)
 
 ---

@@ -27,36 +27,65 @@ window.solid-csd {
 }
 
 button.sidebar-btn {
+    background: none;
     background-color: transparent;
     background-image: none;
     color: rgba(255, 255, 255, 0.80);
-    border: 1px solid transparent;
+    border: 2px solid transparent;
     border-radius: 15px;
-    padding: 8px 6px;
+    padding: 7px 5px;
     min-width: 78px;
     box-shadow: none;
     transition: all 140ms ease;
 }
 
 button.sidebar-btn:hover {
-    background-color: rgba(255, 255, 255, 0.10);
-    color: #ffffff;
-    border-color: transparent;
+    background-color: transparent;
+    background-image: linear-gradient(
+        to bottom,
+        rgba(255, 130, 30, 0.14) 0%,
+        rgba(255, 107, 0, 0.04) 100%
+    );
+    background-clip: padding-box;
+    color: #ff8c2b;
+    border: 2px solid #ff7e1f;
+    border-radius: 15px;
     box-shadow: none;
 }
 
+button.sidebar-btn:hover image {
+    color: #ff8c2b;
+    -gtk-icon-shadow: 0 0 8px rgba(255, 118, 20, 0.55);
+}
+
+button.sidebar-btn:hover label {
+    color: #ff8c2b;
+    text-shadow: 0 0 8px rgba(255, 118, 20, 0.45);
+}
+
 button.sidebar-btn.active {
-    background-color: #ff6b00;
-    background-image: linear-gradient(to bottom,
-            rgba(255, 255, 255, 0.24) 0%,
-            rgba(255, 255, 255, 0.04) 48%,
-            rgba(140, 42, 0, 0.22) 100%);
-    color: #ffffff;
-    border: 1px solid rgba(255, 195, 130, 0.55);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.42),
-        0 5px 14px rgba(255, 107, 0, 0.42),
-        0 2px 6px rgba(0, 0, 0, 0.35);
+    background-color: transparent;
+    background-image: linear-gradient(
+        to bottom,
+        rgba(255, 130, 30, 0.22) 0%,
+        rgba(255, 107, 0, 0.06) 100%
+    );
+    background-clip: padding-box;
+    color: #ff7e1f;
+    border: 2px solid #ff6b00;
+    border-radius: 15px;
+    box-shadow: none;
+}
+
+button.sidebar-btn.active image {
+    color: #ff7e1f;
+    -gtk-icon-shadow: 0 0 10px rgba(255, 118, 20, 0.70);
+}
+
+button.sidebar-btn.active label {
+    color: #ff7e1f;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(255, 118, 20, 0.55);
 }
 
 button.sidebar-btn.drop-target-hover {
@@ -89,6 +118,7 @@ scrolledwindow.sidebar-scroll scrollbar slider {
 scrolledwindow.sidebar-scroll scrollbar slider:hover {
     background-color: rgba(255, 255, 255, 0.35);
 }
+
 
 /* --- Right Content Area & Bright Cold Header Bar --- */
 .content-controls {
@@ -181,7 +211,7 @@ button.breadcrumb-pill:active {
         0 0 8px rgba(255, 110, 15, 0.32);
 }
 
-/* Disabled State: Cool Recessed Nest + Dark Slate Edge */
+/* Disabled State: Bright Cool Neumorphic Rim (Matches Other Header Buttons) */
 button.nav-btn:disabled,
 button.view-btn:disabled {
     opacity: 1.0;
@@ -189,13 +219,13 @@ button.view-btn:disabled {
     border: 2px solid transparent;
     border-radius: 11px;
     background-image:
-        linear-gradient(to bottom, #d5e0ee 0%, #e5eef8 100%),
-        linear-gradient(145deg, #7f8fa6 0%, #576574 100%);
+        linear-gradient(to bottom, #e8f0fa 0%, #dce6f3 100%),
+        linear-gradient(145deg, rgba(210, 222, 238, 0.90) 0%, rgba(175, 192, 216, 0.85) 100%);
     background-origin: border-box;
     background-clip: padding-box, border-box;
     box-shadow:
-        inset 2px 2px 4px rgba(115, 138, 170, 0.42),
-        inset -2px -2px 4px rgba(255, 255, 255, 0.88);
+        inset 1px 1px 2px rgba(145, 165, 192, 0.30),
+        inset -1px -1px 2px rgba(255, 255, 255, 0.92);
 }
 
 /* Active View Toggle & Active/Last Breadcrumb Folder: Lit Orange Light-Stripe + Warm Glow */
@@ -242,18 +272,21 @@ entry.header-search:focus-within {
         inset 1px 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* --- Circular Neumorphic Window Controls --- */
+/* --- Circular Neumorphic Window Controls with Matching Silver-Grey Rim --- */
 button.win-ctrl-btn,
-button.win-ctrl-btn:hover,
 button.win-ctrl-btn:active {
     min-height: 30px;
     min-width: 30px;
     padding: 0;
-    background-color: #dce5f2;
-    background-image: linear-gradient(145deg, #eef4fc 0%, #c6d3e5 100%);
     color: #3b4a5e;
-    border: 1px solid rgba(255, 255, 255, 0.78);
+    border: 2px solid transparent;
     border-radius: 999px;
+    background-color: #dce5f2;
+    background-image:
+        linear-gradient(145deg, #eef4fc 0%, #c6d3e5 100%),
+        linear-gradient(145deg, rgba(205, 218, 236, 0.92) 0%, rgba(155, 174, 202, 0.88) 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
     box-shadow:
         -3px -3px 6px rgba(255, 255, 255, 0.95),
         3px 4px 7px rgba(125, 148, 180, 0.50),
@@ -262,14 +295,38 @@ button.win-ctrl-btn:active {
 }
 
 button.win-ctrl-btn:hover {
-    background-image: linear-gradient(145deg, #f5f9fe 0%, #cfdbe9 100%);
-    color: #1e272e;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-image:
+        linear-gradient(145deg, #f5f9fe 0%, #dce6f3 100%),
+        linear-gradient(145deg, #ffc470 0%, #ff730a 55%, #e04b00 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+        inset 0 1.5px 1px rgba(255, 255, 255, 1.0),
+        -2px -2px 5px rgba(255, 255, 255, 0.95),
+        3px 4px 8px rgba(255, 107, 0, 0.36),
+        0 0 15px rgba(255, 118, 20, 0.52);
 }
 
 button.win-ctrl-btn image {
     -gtk-icon-size: 14px;
 }
+/* Minimize (Yellow/Amber), Maximize (Green), Close (Red) Symbolic Icons */
+.squircle-header-content > box:last-child > button.win-ctrl-btn:first-child image {
+    color: #d98a00;
+    -gtk-icon-palette: default #d98a00;
+}
 
+.squircle-header-content > box:last-child > button.win-ctrl-btn:nth-child(2) image {
+    color: #1e9e4a;
+    -gtk-icon-palette: default #1e9e4a;
+}
+
+.squircle-header-content > box:last-child > button.win-ctrl-btn:last-child image {
+    color: #dc3545;
+    -gtk-icon-palette: default #dc3545;
+}
 /* --- Scrollable File Cards Grid --- */
 .files-grid {
     padding: 12px 42px 24px 42px;
@@ -631,4 +688,15 @@ button.modal-secondary-btn {
 
 .content-controls scrolledwindow scrollbar.vertical slider:hover {
     background-color: rgba(255, 107, 0, 0.65);
+}
+
+css
+button.sidebar-btn,
+button.sidebar-btn:focus,
+button.sidebar-btn:focus-visible,
+button.sidebar-btn:hover,
+button.sidebar-btn.active {
+    outline: none;
+    outline-width: 0;
+    outline-color: transparent;
 }

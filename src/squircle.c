@@ -5,7 +5,7 @@ static void cairo_squircle_path(cairo_t *cr, double x, double y, double w, doubl
     if (rx > w / 2.0) rx = w / 2.0;
     if (ry > h / 2.0) ry = h / 2.0;
 
-    const int steps = 96;
+    const int steps = 240;
     const double exp_val = 2.0 / n;
 
     double cx_tr = x + w - rx, cy_tr = y + ry;
@@ -137,7 +137,7 @@ void on_draw_squircle_bg(GtkDrawingArea *area, cairo_t *cr, int width, int heigh
     }
 
     cairo_save(cr);
-    cairo_squircle_path(cr, x, y, w, h, rx_outer, ry_outer, n_outer);
+    cairo_squircle_path(cr, x + 1.2, y + 1.2, w - 2.4, h - 2.4, rx_outer, ry_outer, n_outer);
     cairo_clip(cr);
 
     /* 1. Translucent Slate-Charcoal Sidebar with Subtle 3D Gradient (Wayfire blur shines through) */
@@ -229,11 +229,21 @@ void on_draw_squircle_bg(GtkDrawingArea *area, cairo_t *cr, int width, int heigh
     cairo_restore(cr);
     cairo_restore(cr);
 
-    /* Thin Crisp Grey Border around Outer Silhouette */
+    /* 2px Warm Orange Gradient Border around Outer Superellipse Silhouette */
     if (!is_max) {
-        cairo_squircle_path(cr, x + 0.5, y + 0.5, w - 1.0, h - 1.0, rx_outer, ry_outer, n_outer);
-        cairo_set_source_rgba(cr, 180.0 / 255.0, 185.0 / 255.0, 195.0 / 255.0, 0.55);
-        cairo_set_line_width(cr, 1.0);
+        cairo_save(cr);
+        cairo_squircle_path(cr, x + 1.0, y + 1.0, w - 2.0, h - 2.0, rx_outer, ry_outer, n_outer);
+
+        cairo_pattern_t *rim_grad = cairo_pattern_create_linear(x, y, x + w, y + h);
+        cairo_pattern_add_color_stop_rgba(rim_grad, 0.0, 1.00, 0.72, 0.34, 0.92);
+        cairo_pattern_add_color_stop_rgba(rim_grad, 0.5, 1.00, 0.42, 0.00, 0.95);
+        cairo_pattern_add_color_stop_rgba(rim_grad, 1.0, 0.82, 0.25, 0.00, 0.90);
+
+        cairo_set_source(cr, rim_grad);
+        cairo_set_line_width(cr, 2.0);
         cairo_stroke(cr);
+
+        cairo_pattern_destroy(rim_grad);
+        cairo_restore(cr);
     }
 }

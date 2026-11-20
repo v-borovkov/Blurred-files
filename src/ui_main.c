@@ -943,10 +943,10 @@ void activate_app(GtkApplication *app, gpointer user_data)
     GtkWidget *breadcrumb_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
     gtk_widget_add_css_class(breadcrumb_box, "breadcrumb-container");
     gtk_widget_set_valign(breadcrumb_box, GTK_ALIGN_CENTER);
-    gtk_widget_set_margin_top(breadcrumb_box, 8);
-    gtk_widget_set_margin_bottom(breadcrumb_box, 8);
-    gtk_widget_set_margin_start(breadcrumb_box, 8);
-    gtk_widget_set_margin_end(breadcrumb_box, 8);
+    gtk_widget_set_margin_top(breadcrumb_box, 15);
+    gtk_widget_set_margin_bottom(breadcrumb_box, 15);
+    gtk_widget_set_margin_start(breadcrumb_box, 12);
+    gtk_widget_set_margin_end(breadcrumb_box, 12);
     state->breadcrumb_box = breadcrumb_box;
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(breadcrumb_scroll), breadcrumb_box);
     GtkWidget *crumb_fade_wrap = g_object_new(breadcrumb_fade_box_get_type(), NULL);
