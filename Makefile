@@ -29,7 +29,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(SRC_DIR)/app.h | $(BUILD_DIR)
 
 install: $(TARGET)
 	install -Dm755 $(TARGET) $(DESTDIR)$(BINDIR)/blurred_files
-	install -Dm644 $(SRC_DIR)/style.css $(DESTDIR)$(DATADIR)/style.css
+	install -Dm644 src/bfiles.css $(DESTDIR)$(DATADIR)/bfiles.css
 	install -Dm644 $(SRC_DIR)/blurred_files.svg $(DESTDIR)$(ICONDIR)/blurred_files.svg
 	install -Dm644 blurred_files.desktop $(DESTDIR)$(APPDIR)/blurred_files.desktop
 	gtk-update-icon-cache -f -t $(DESTDIR)$(PREFIX)/share/icons/hicolor 2>/dev/null || true

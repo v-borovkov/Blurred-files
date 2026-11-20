@@ -3,76 +3,49 @@ set -euo pipefail
 
 PKG_NAME="blurred-files"
 VERSION="1.0.0"
-ARCH="amd64"
-if command -v dpkg >/dev/null 2>&1; then
-    ARCH="$(dpkg --print-architecture)"
-elif [ "$(uname -m)" = "aarch64" ]; then
-    ARCH="arm64"
-fi
+ARCH="$(dpkg --print-architecture 2>/dev/null || echo amd64)"
+STAGE_DIR="pkg_deb"
+OUT_DEB="${PKG_NAME}_${VERSION}_${ARCH}.deb"
 
-STAGE_DIR="build/deb_pkg"
-DEB_WORK="build/deb_work"
-
-echo "==> Cleaning and building release binary for /usr..."
+rm -rf "$STAGE_DIR"
 make clean
-PREFIX=/usr make -j"$(nproc)"
+make PREFIX=/usr -j"$(nproc)"
 
-echo "==> Staging files into $STAGE_DIR..."
-rm -rf "$STAGE_DIR" "$DEB_WORK"
-mkdir -p "$STAGE_DIR/DEBIAN" "$DEB_WORK"
-DESTDIR="$(pwd)/$STAGE_DIR" PREFIX=/usr make install
+# Install binary, bfiles.css, desktop entry, and icon into staging dir
+install -Dm755 build/blurred_files "$STAGE_DIR/usr/bin/blurred_files"
+install -Dm644 src/bfiles.css "$STAGE_DIR/usr/share/blurred_files/bfiles.css"
+install -Dm644 blurred_files.desktop "$STAGE_DIR/usr/share/applications/blurred_files.desktop"
+install -Dm644 src/blurred_files.svg "$STAGE_DIR/usr/share/icons/hicolor/scalable/apps/blurred_files.svg"
 
-cat <<EOF > "$STAGE_DIR/DEBIAN/control"
-Package: $PKG_NAME
-Version: $VERSION
+# Create DEBIAN control metadata
+mkdir -p "$STAGE_DIR/DEBIAN"
+chmod 0755 "$STAGE_DIR/DEBIAN"
+
+cat > "$STAGE_DIR/DEBIAN/control" <<EOF
+Package: ${PKG_NAME}
+Version: ${VERSION}
 Section: utils
 Priority: optional
-Architecture: $ARCH
-Depends: libgtk-4-1, libglib2.0-0, libcairo2, libgdk-pixbuf-2.0-0
-Recommends: zip, unzip, tar, xdg-utils
-Maintainer: Custom Developer <dev@localhost>
-Description: Blurred Files - Custom Superellipse Wayland File Manager
- A lightweight, GPU-accelerated GTK4 and Cairo file manager featuring a
- custom superellipse silhouette, frosted surfaces, drag-and-drop,
- archive extraction, and Wayland clipboard integration.
+Architecture: ${ARCH}
+Depends: libgtk-4-1, libglib2.0-0, libcairo2, zip, unzip, tar, xdg-utils
+Maintainer: v-borovkov <v-borovkov@://github.com>
+Description: Fast, lightweight GTK4 file manager with superellipse UI
+ A custom GTK4 file manager written in C featuring a superellipse silhouette,
+ translucent Wayfire-blurred sidebar, and tactile Neumorphic header controls.
 EOF
 
-cat <<'EOF' > "$STAGE_DIR/DEBIAN/postinst"
+cat > "$STAGE_DIR/DEBIAN/postinst" <<'EOF'
 #!/bin/sh
 set -e
-if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-    gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true
-fi
 if command -v update-desktop-database >/dev/null 2>&1; then
-    update-desktop-database /usr/share/applications || true
+    update-desktop-database -q /usr/share/applications || true
+fi
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
 fi
 EOF
 chmod 0755 "$STAGE_DIR/DEBIAN/postinst"
 
-cat <<'EOF' > "$STAGE_DIR/DEBIAN/postrm"
-#!/bin/sh
-set -e
-if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-    gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true
-fi
-if command -v update-desktop-database >/dev/null 2>&1; then
-    update-desktop-database /usr/share/applications || true
-fi
-EOF
-chmod 0755 "$STAGE_DIR/DEBIAN/postrm"
-
-DEB_OUT="$(pwd)/${PKG_NAME}_${VERSION}_${ARCH}.deb"
-rm -f "$DEB_OUT"
-
-if command -v dpkg-deb >/dev/null 2>&1; then
-    dpkg-deb --build --root-owner-group "$STAGE_DIR" "$DEB_OUT"
-else
-    echo "==> dpkg-deb not found; assembling .deb archive with tar + ar..."
-    printf "2.0\n" > "$DEB_WORK/debian-binary"
-    tar --owner=0 --group=0 -czf "$DEB_WORK/control.tar.gz" -C "$STAGE_DIR/DEBIAN" .
-    tar --owner=0 --group=0 --exclude='./DEBIAN' -czf "$DEB_WORK/data.tar.gz" -C "$STAGE_DIR" .
-    (cd "$DEB_WORK" && ar rcs "$DEB_OUT" debian-binary control.tar.gz data.tar.gz)
-fi
-
-echo "==> Created $(basename "$DEB_OUT")"
-echo "    Install on Debian/Ubuntu with: sudo apt install ./$(basename "$DEB_OUT")"
+dpkg-deb --build --root-owner-group "$STAGE_DIR" "$OUT_DEB"
+rm -rf "$STAGE_DIR"
+echo "Built $OUT_DEB successfully."

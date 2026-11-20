@@ -12,7 +12,7 @@ PREFIX="$PREFIX" make -j"$(nproc)"
 
 echo "==> Installing binary and assets to $PREFIX..."
 sudo install -Dm755 build/blurred_files "$BINDIR/blurred_files"
-sudo install -Dm644 src/style.css "$DATADIR/style.css"
+sudo install -Dm644 src/bfiles.css /usr/local/share/blurred_files/bfiles.css
 
 echo "==> Installing desktop launcher entry..."
 sudo mkdir -p "$APPDIR"

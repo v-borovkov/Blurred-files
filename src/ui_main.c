@@ -825,17 +825,17 @@ void activate_app(GtkApplication *app, gpointer user_data)
 {
     (void)user_data;
     GtkCssProvider *provider = gtk_css_provider_new();
-    if (g_file_test("src/style.css", G_FILE_TEST_EXISTS))
+    if (g_file_test("src/bfiles.css", G_FILE_TEST_EXISTS))
     {
-        gtk_css_provider_load_from_path(provider, "src/style.css");
+        gtk_css_provider_load_from_path(provider, "src/bfiles.css");
     }
-    else if (g_file_test("style.css", G_FILE_TEST_EXISTS))
+    else if (g_file_test("bfiles.css", G_FILE_TEST_EXISTS))
     {
-        gtk_css_provider_load_from_path(provider, "style.css");
+        gtk_css_provider_load_from_path(provider, "bfiles.css");
     }
     else
     {
-        gtk_css_provider_load_from_path(provider, DATADIR "/style.css");
+        gtk_css_provider_load_from_path(provider, DATADIR "/bfiles.css");
     }
     gtk_style_context_add_provider_for_display(
         gdk_display_get_default(),
