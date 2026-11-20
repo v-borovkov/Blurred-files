@@ -156,6 +156,20 @@ static void on_window_border_pressed(GtkGestureClick *gesture, int n_press, doub
     }
 }
 
+/* --- Adaptive Header Padding on Ultra-Wide Windows --- */
+static void on_bg_canvas_resized(GtkDrawingArea *area, int width, int height, gpointer user_data) {
+    (void)height;
+    GtkWidget *header_box = GTK_WIDGET(user_data);
+    GtkWidget *window = gtk_widget_get_ancestor(GTK_WIDGET(area), GTK_TYPE_WINDOW);
+    gboolean is_max = (window && GTK_IS_WINDOW(window))
+        ? gtk_window_is_maximized(GTK_WINDOW(window))
+        : FALSE;
+
+    int extra = (!is_max && width > 1200) ? MIN(140, (width - 1200) / 6) : 0;
+    gtk_widget_set_margin_start(header_box, extra);
+    gtk_widget_set_margin_end(header_box, extra);
+}
+
 /* --- True Alpha-Mask Container for Smooth Breadcrumb Edge Fading --- */
 typedef struct
 {
@@ -328,7 +342,6 @@ static void on_root_slash_clicked(GtkButton *btn, gpointer user_data)
     AppState *state = (AppState *)user_data;
     navigate_to_path(state, "/", TRUE);
 }
-
 static gboolean close_slash_copied_popover_cb(gpointer user_data)
 {
     GtkWidget *popover = GTK_WIDGET(user_data);
@@ -340,7 +353,6 @@ static gboolean close_slash_copied_popover_cb(gpointer user_data)
     g_object_unref(popover);
     return G_SOURCE_REMOVE;
 }
-
 static void on_slash_right_clicked(GtkGestureClick *gesture, int n_press, double x, double y, gpointer user_data)
 {
     (void)n_press;
@@ -349,29 +361,23 @@ static void on_slash_right_clicked(GtkGestureClick *gesture, int n_press, double
     AppState *state = (AppState *)user_data;
     if (!state->current_path)
         return;
-
     GdkClipboard *clipboard = gdk_display_get_clipboard(gdk_display_get_default());
     gdk_clipboard_set_text(clipboard, state->current_path);
-
     GtkWidget *btn = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
     if (!btn)
         return;
-
     GtkWidget *popover = gtk_popover_new();
     gtk_widget_set_parent(popover, btn);
     gtk_popover_set_autohide(GTK_POPOVER(popover), FALSE);
     gtk_popover_set_has_arrow(GTK_POPOVER(popover), TRUE);
     gtk_popover_set_position(GTK_POPOVER(popover), GTK_POS_BOTTOM);
     gtk_widget_add_css_class(popover, "copied-tooltip-popover");
-
     GtkWidget *lbl = gtk_label_new("Copied!");
     gtk_widget_add_css_class(lbl, "copied-tooltip-label");
     gtk_popover_set_child(GTK_POPOVER(popover), lbl);
-
     gtk_popover_popup(GTK_POPOVER(popover));
     g_timeout_add(1100, close_slash_copied_popover_cb, g_object_ref(popover));
 }
-
 /* --- Column Sort Header Callbacks --- */
 static void on_sort_name_clicked(GtkButton *btn, gpointer data)
 {
@@ -824,6 +830,7 @@ static gboolean on_window_key_pressed(GtkEventControllerKey *controller,
 void activate_app(GtkApplication *app, gpointer user_data)
 {
     (void)user_data;
+    g_clear_weak_pointer(&last_resize_hovered_widget);
     GtkCssProvider *provider = gtk_css_provider_new();
     if (g_file_test("src/bfiles.css", G_FILE_TEST_EXISTS))
     {
@@ -852,10 +859,10 @@ void activate_app(GtkApplication *app, gpointer user_data)
     load_app_settings(state);
     state->grid_cols = CLAMP(state->grid_cols, 0, 4);
     GtkWidget *window = gtk_application_window_new(app);
-    gtk_window_set_title(GTK_WINDOW(window), "Custom File Manager");
+    gtk_window_set_title(GTK_WINDOW(window), "Blurred Files");
     gtk_window_set_icon_name(GTK_WINDOW(window), "blurred_files");
     gtk_window_set_default_size(GTK_WINDOW(window), 1200, 720);
-    gtk_widget_set_size_request(window, 640, 480);
+    gtk_widget_set_size_request(window, 820, 480);
     gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
     g_object_set_data(G_OBJECT(window), "app-state", state);
     state->window = window;
@@ -898,6 +905,7 @@ void activate_app(GtkApplication *app, gpointer user_data)
     GtkWidget *header_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_add_css_class(header_box, "squircle-header-content");
     gtk_window_handle_set_child(GTK_WINDOW_HANDLE(window_handle), header_box);
+    g_signal_connect(bg_canvas, "resize", G_CALLBACK(on_bg_canvas_resized), header_box);
     /* 1. Left & Right Arrow Buttons Together (No Gap) */
     GtkWidget *back_btn = gtk_button_new_from_icon_name("go-previous-symbolic");
     GtkWidget *fwd_btn = gtk_button_new_from_icon_name("go-next-symbolic");
@@ -986,7 +994,7 @@ void activate_app(GtkApplication *app, gpointer user_data)
     /* 4. Search Bar & Settings Gear Button (Little Spacing) */
     GtkWidget *search_entry = gtk_search_entry_new();
     gtk_widget_add_css_class(search_entry, "header-search");
-    gtk_widget_set_size_request(search_entry, 165, 30);
+    gtk_widget_set_size_request(search_entry, 150, 30);
     gtk_widget_set_valign(search_entry, GTK_ALIGN_CENTER);
     gtk_widget_set_margin_start(search_entry, 8);
     state->search_entry = search_entry;

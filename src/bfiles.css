@@ -315,17 +315,17 @@ button.win-ctrl-btn image {
 /* Minimize (Yellow/Amber), Maximize (Green), Close (Red) Symbolic Icons */
 .squircle-header-content > box:last-child > button.win-ctrl-btn:first-child image {
     color: #d98a00;
-    -gtk-icon-palette: default #d98a00;
+
 }
 
 .squircle-header-content > box:last-child > button.win-ctrl-btn:nth-child(2) image {
     color: #1e9e4a;
-    -gtk-icon-palette: default #1e9e4a;
+
 }
 
 .squircle-header-content > box:last-child > button.win-ctrl-btn:last-child image {
     color: #dc3545;
-    -gtk-icon-palette: default #dc3545;
+
 }
 /* --- Scrollable File Cards Grid --- */
 .files-grid {
