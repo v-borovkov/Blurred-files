@@ -444,17 +444,26 @@ static char *build_unique_destination_path(const char *dest_dir, const char *bas
         return candidate;
     }
     g_free(candidate);
+
+    const char *dot = strrchr(basename, '.');
+    gboolean has_ext = (dot != NULL && dot != basename);
+    char *stem = has_ext ? g_strndup(basename, (gsize)(dot - basename)) : g_strdup(basename);
+    const char *ext = has_ext ? dot : "";
+
     for (int i = 1; i < 1000; i++)
     {
-        char *alt_name = g_strdup_printf("%s (copy %d)", basename, i);
+        char *alt_name = g_strdup_printf("%s (copy %d)%s", stem, i, ext);
         candidate = g_build_filename(dest_dir, alt_name, NULL);
         g_free(alt_name);
         if (!g_file_test(candidate, G_FILE_TEST_EXISTS))
         {
+            g_free(stem);
             return candidate;
         }
         g_free(candidate);
     }
+
+    g_free(stem);
     return g_build_filename(dest_dir, basename, NULL);
 }
 void bulk_paste_clipboard_items(AppState *state)

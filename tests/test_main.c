@@ -1,6 +1,7 @@
 #include "../src/app.h"
 #include <glib/gstdio.h>
 #include <string.h>
+#include <unistd.h>
 
 typedef struct
 {
@@ -523,6 +524,321 @@ static void test_cairo_squircle_render(void)
     g_object_ref_sink(da);
     g_object_unref(da);
 }
+/* --- Test 13: Duplicate Filename Conflict on Same-Folder Paste --- */
+static void test_duplicate_name_conflict(TestFixture *fix, gconstpointer user_data)
+{
+    (void)user_data;
+    AppState *s = fix->state;
+
+    write_dummy_file(fix->work_dir, "budget.txt", "original data");
+    navigate_to_path(s, fix->work_dir, FALSE);
+
+    select_item_by_name(s, "budget.txt");
+    bulk_copy_selected_items(s, FALSE);
+    bulk_paste_clipboard_items(s);
+
+    int txt_count = 0;
+    for (GtkWidget *c = gtk_widget_get_first_child(s->flowbox); c; c = gtk_widget_get_next_sibling(c))
+    {
+        GtkWidget *btn = gtk_flow_box_child_get_child(GTK_FLOW_BOX_CHILD(c));
+        const char *lbl = find_first_label_text(btn);
+        if (lbl && g_str_has_suffix(lbl, ".txt"))
+            txt_count++;
+    }
+    g_assert_cmpint(txt_count, ==, 2);
+
+    char *orig = g_build_filename(fix->work_dir, "budget.txt", NULL);
+    char *contents = NULL;
+    g_file_get_contents(orig, &contents, NULL, NULL);
+    g_assert_cmpstr(contents, ==, "original data");
+    g_free(contents);
+    g_free(orig);
+}
+
+/* --- Test 14: Multi-File & Nested Folder Copy/Paste --- */
+static void test_multi_file_copy_paste(TestFixture *fix, gconstpointer user_data)
+{
+    (void)user_data;
+    AppState *s = fix->state;
+
+    char *sub = g_build_filename(fix->work_dir, "sub_folder", NULL);
+    char *dest = g_build_filename(fix->work_dir, "target_dir", NULL);
+    g_mkdir_with_parents(sub, 0755);
+    g_mkdir_with_parents(dest, 0755);
+
+    write_dummy_file(fix->work_dir, "f1.txt", "one");
+    write_dummy_file(sub, "nested.txt", "inside");
+
+    navigate_to_path(s, fix->work_dir, FALSE);
+    select_item_by_name(s, "f1.txt");
+    select_item_by_name(s, "sub_folder");
+
+    bulk_copy_selected_items(s, FALSE);
+    navigate_to_path(s, dest, TRUE);
+    bulk_paste_clipboard_items(s);
+
+    char *copied_f1 = g_build_filename(dest, "f1.txt", NULL);
+    char *copied_nested = g_build_filename(dest, "sub_folder", "nested.txt", NULL);
+    g_assert_true(g_file_test(copied_f1, G_FILE_TEST_EXISTS));
+    g_assert_true(g_file_test(copied_nested, G_FILE_TEST_EXISTS));
+
+    g_free(copied_f1);
+    g_free(copied_nested);
+    g_free(sub);
+    g_free(dest);
+}
+
+/* --- Test 15: Undo / Redo Empty-Stack Boundaries --- */
+static void test_undo_redo_boundaries(TestFixture *fix, gconstpointer user_data)
+{
+    (void)user_data;
+    AppState *s = fix->state;
+
+    navigate_to_path(s, fix->work_dir, FALSE);
+    perform_undo(s);
+    perform_redo(s);
+    g_assert_cmpstr(s->current_path, ==, fix->work_dir);
+}
+
+/* --- Test 16: Sort Direction Toggle & Folders-First Ordering --- */
+static void test_sort_order_toggle_and_types(TestFixture *fix, gconstpointer user_data)
+{
+    (void)user_data;
+    AppState *s = fix->state;
+
+    char *dir_z = g_build_filename(fix->work_dir, "z_folder", NULL);
+    g_mkdir_with_parents(dir_z, 0755);
+    write_dummy_file(fix->work_dir, "a_file.txt", "text");
+    write_dummy_file(fix->work_dir, "b_image.png", "png");
+
+    s->sort_column = SORT_BY_NAME;
+    s->sort_ascending = TRUE;
+    navigate_to_path(s, fix->work_dir, FALSE);
+
+    GtkWidget *first = gtk_widget_get_first_child(s->flowbox);
+    GtkWidget *btn1 = gtk_flow_box_child_get_child(GTK_FLOW_BOX_CHILD(first));
+    g_assert_cmpstr(find_first_label_text(btn1), ==, "z_folder");
+
+    set_sort_column(s, SORT_BY_NAME);
+    g_assert_false(s->sort_ascending);
+
+    set_sort_column(s, SORT_BY_TYPE);
+    g_assert_cmpint(s->sort_column, ==, SORT_BY_TYPE);
+
+    set_sort_column(s, SORT_BY_DATE);
+    g_assert_cmpint(s->sort_column, ==, SORT_BY_DATE);
+
+    g_free(dir_z);
+}
+
+/* --- Test 17: Case-Insensitive Search & Clear Reset --- */
+static void test_search_case_and_reset(TestFixture *fix, gconstpointer user_data)
+{
+    (void)user_data;
+    AppState *s = fix->state;
+
+    write_dummy_file(fix->work_dir, "Invoice_2026.pdf", "pdf");
+    write_dummy_file(fix->work_dir, "readme.md", "md");
+    navigate_to_path(s, fix->work_dir, FALSE);
+
+    gtk_editable_set_text(GTK_EDITABLE(s->search_entry), "INVOICE");
+    on_search_changed(GTK_SEARCH_ENTRY(s->search_entry), s);
+
+    GtkWidget *first = gtk_widget_get_first_child(s->flowbox);
+    g_assert_nonnull(first);
+    g_assert_null(gtk_widget_get_next_sibling(first));
+
+    gtk_editable_set_text(GTK_EDITABLE(s->search_entry), "");
+    on_search_changed(GTK_SEARCH_ENTRY(s->search_entry), s);
+
+    int total = 0;
+    for (GtkWidget *c = gtk_widget_get_first_child(s->flowbox); c; c = gtk_widget_get_next_sibling(c))
+    {
+        total++;
+    }
+    g_assert_cmpint(total, ==, 2);
+}
+
+/* --- Test 18: External File Change Auto-Refresh via GFileMonitor --- */
+static void test_directory_monitor_auto_refresh(TestFixture *fix, gconstpointer user_data)
+{
+    (void)user_data;
+    AppState *s = fix->state;
+
+    navigate_to_path(s, fix->work_dir, FALSE);
+    g_assert_null(gtk_widget_get_first_child(s->flowbox));
+
+    write_dummy_file(fix->work_dir, "external_drop.txt", "created externally");
+    pump_events_ms(350);
+
+    GtkWidget *first = gtk_widget_get_first_child(s->flowbox);
+    g_assert_nonnull(first);
+    GtkWidget *btn = gtk_flow_box_child_get_child(GTK_FLOW_BOX_CHILD(first));
+    g_assert_cmpstr(find_first_label_text(btn), ==, "external_drop.txt");
+}
+
+/* --- Test 19: Valid & Broken Symlink Safety --- */
+static void test_symlink_and_broken_link_safety(TestFixture *fix, gconstpointer user_data)
+{
+    (void)user_data;
+    AppState *s = fix->state;
+
+    write_dummy_file(fix->work_dir, "real.txt", "target");
+    char *real_path = g_build_filename(fix->work_dir, "real.txt", NULL);
+    char *good_link = g_build_filename(fix->work_dir, "good_link.txt", NULL);
+    char *dead_link = g_build_filename(fix->work_dir, "dead_link.txt", NULL);
+
+    g_assert_cmpint(symlink(real_path, good_link), ==, 0);
+    g_assert_cmpint(symlink("/nonexistent/blurred_files_dead_target", dead_link), ==, 0);
+
+    navigate_to_path(s, fix->work_dir, FALSE);
+
+    int count = 0;
+    for (GtkWidget *c = gtk_widget_get_first_child(s->flowbox); c; c = gtk_widget_get_next_sibling(c))
+    {
+        count++;
+    }
+    g_assert_cmpint(count, ==, 3);
+
+    g_free(real_path);
+    g_free(good_link);
+    g_free(dead_link);
+}
+
+/* --- Test 20: .zip Archive Compression & Extraction --- */
+static void test_archive_zip_format(TestFixture *fix, gconstpointer user_data)
+{
+    (void)user_data;
+    AppState *s = fix->state;
+
+    write_dummy_file(fix->work_dir, "zip_one.txt", "111");
+    write_dummy_file(fix->work_dir, "zip_two.txt", "222");
+    navigate_to_path(s, fix->work_dir, FALSE);
+
+    select_item_by_name(s, "zip_one.txt");
+    select_item_by_name(s, "zip_two.txt");
+    bulk_compress_selected_items(s, FALSE);
+    pump_events_ms(150);
+
+    const char *zip_name = NULL;
+    for (GtkWidget *c = gtk_widget_get_first_child(s->flowbox); c; c = gtk_widget_get_next_sibling(c))
+    {
+        GtkWidget *btn = gtk_flow_box_child_get_child(GTK_FLOW_BOX_CHILD(c));
+        const char *lbl = find_first_label_text(btn);
+        if (lbl && g_str_has_suffix(lbl, ".zip"))
+        {
+            zip_name = lbl;
+            break;
+        }
+    }
+    g_assert_nonnull(zip_name);
+
+    char *p1 = g_build_filename(fix->work_dir, "zip_one.txt", NULL);
+    char *p2 = g_build_filename(fix->work_dir, "zip_two.txt", NULL);
+    g_unlink(p1);
+    g_unlink(p2);
+
+    clear_item_selection(s);
+    select_item_by_name(s, zip_name);
+    bulk_extract_selected_archives(s);
+    pump_events_ms(150);
+
+    g_assert_true(g_file_test(p1, G_FILE_TEST_EXISTS));
+    g_assert_true(g_file_test(p2, G_FILE_TEST_EXISTS));
+
+    g_free(p1);
+    g_free(p2);
+}
+
+/* --- Test 21: Navigation Edge Boundaries --- */
+static void test_navigation_edge_boundaries(TestFixture *fix, gconstpointer user_data)
+{
+    (void)user_data;
+    AppState *s = fix->state;
+
+    navigate_to_path(s, fix->work_dir, FALSE);
+    on_back_clicked(NULL, s);
+    on_fwd_clicked(NULL, s);
+    g_assert_cmpstr(s->current_path, ==, fix->work_dir);
+
+    navigate_to_path(s, "/", TRUE);
+    g_assert_cmpstr(s->current_path, ==, "/");
+    g_assert_nonnull(gtk_widget_get_first_child(s->flowbox));
+}
+
+/* --- Test 22: Async Image Thumbnail Generation & Cancellation --- */
+static void test_async_image_thumbnail(TestFixture *fix, gconstpointer user_data)
+{
+    (void)user_data;
+    AppState *s = fix->state;
+
+    char *png_path = g_build_filename(fix->work_dir, "sample.png", NULL);
+    GdkPixbuf *pb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 32, 32);
+    gdk_pixbuf_fill(pb, 0xff6b00ff);
+    g_assert_true(gdk_pixbuf_save(pb, png_path, "png", NULL, NULL));
+    g_object_unref(pb);
+
+    s->enable_thumbnails = TRUE;
+    navigate_to_path(s, fix->work_dir, FALSE);
+    pump_events_ms(120);
+
+    /* Rapidly navigate away to verify cancellable thumbnail cleanup under ASan */
+    char *other = g_build_filename(fix->work_dir, "empty_sub", NULL);
+    g_mkdir_with_parents(other, 0755);
+    navigate_to_path(s, other, TRUE);
+    pump_events_ms(40);
+
+    g_free(png_path);
+    g_free(other);
+}
+
+/* --- Test 23: Open With Dialog Smoke Test --- */
+static void test_open_with_dialog_smoke(TestFixture *fix, gconstpointer user_data)
+{
+    (void)user_data;
+    AppState *s = fix->state;
+
+    write_dummy_file(fix->work_dir, "readme.txt", "open with test");
+    char *txt_path = g_build_filename(fix->work_dir, "readme.txt", NULL);
+    navigate_to_path(s, fix->work_dir, FALSE);
+
+    show_open_with_dialog(s, txt_path);
+    pump_events_ms(50);
+
+    GList *toplevels = gtk_window_list_toplevels();
+    for (GList *l = toplevels; l != NULL; l = l->next)
+    {
+        GtkWindow *w = GTK_WINDOW(l->data);
+        if (GTK_WIDGET(w) != fix->window)
+        {
+            gtk_window_destroy(w);
+        }
+    }
+    g_list_free(toplevels);
+    pump_events_ms(30);
+
+    g_free(txt_path);
+}
+
+/* --- Test 24: Clear Selection & Multi-Select State --- */
+static void test_clear_and_multi_selection(TestFixture *fix, gconstpointer user_data)
+{
+    (void)user_data;
+    AppState *s = fix->state;
+
+    write_dummy_file(fix->work_dir, "a.txt", "a");
+
+    write_dummy_file(fix->work_dir, "b.txt", "b");
+    write_dummy_file(fix->work_dir, "c.txt", "c");
+    navigate_to_path(s, fix->work_dir, FALSE);
+    select_all_items(s);
+    GList *sel = get_selected_paths(s);
+    g_assert_cmpuint(g_list_length(sel), ==, 3);
+    g_list_free_full(sel, g_free);
+    clear_item_selection(s);
+    sel = get_selected_paths(s);
+    g_assert_cmpuint(g_list_length(sel), ==, 0);
+}
 int main(int argc, char **argv)
 {
     g_mkdir_with_parents(g_get_user_cache_dir(), 0755);
@@ -551,6 +867,18 @@ int main(int argc, char **argv)
     g_test_add("/ui/view_modes_and_zoom", TestFixture, NULL, fixture_setup, test_view_modes_and_zoom, fixture_teardown);
     g_test_add("/ui/status_bar_updates", TestFixture, NULL, fixture_setup, test_status_bar_updates, fixture_teardown);
     g_test_add("/ui/squircle_modals_smoke", TestFixture, NULL, fixture_setup, test_squircle_modals_smoke, fixture_teardown);
+     g_test_add("/fs/duplicate_name_conflict", TestFixture, NULL, fixture_setup, test_duplicate_name_conflict, fixture_teardown);
+    g_test_add("/fs/multi_file_copy_paste", TestFixture, NULL, fixture_setup, test_multi_file_copy_paste, fixture_teardown);
+    g_test_add("/fs/undo_redo_boundaries", TestFixture, NULL, fixture_setup, test_undo_redo_boundaries, fixture_teardown);
+    g_test_add("/fs/sort_order_toggle_and_types", TestFixture, NULL, fixture_setup, test_sort_order_toggle_and_types, fixture_teardown);
+    g_test_add("/fs/search_case_and_reset", TestFixture, NULL, fixture_setup, test_search_case_and_reset, fixture_teardown);
+    g_test_add("/fs/directory_monitor_auto_refresh", TestFixture, NULL, fixture_setup, test_directory_monitor_auto_refresh, fixture_teardown);
+    g_test_add("/fs/symlink_and_broken_link_safety", TestFixture, NULL, fixture_setup, test_symlink_and_broken_link_safety, fixture_teardown);
+    g_test_add("/fs/archive_zip_format", TestFixture, NULL, fixture_setup, test_archive_zip_format, fixture_teardown);
+    g_test_add("/nav/navigation_edge_boundaries", TestFixture, NULL, fixture_setup, test_navigation_edge_boundaries, fixture_teardown);
+    g_test_add("/thumbs/async_image_thumbnail", TestFixture, NULL, fixture_setup, test_async_image_thumbnail, fixture_teardown);
+    g_test_add("/ui/open_with_dialog_smoke", TestFixture, NULL, fixture_setup, test_open_with_dialog_smoke, fixture_teardown);
+    g_test_add("/ui/clear_and_multi_selection", TestFixture, NULL, fixture_setup, test_clear_and_multi_selection, fixture_teardown);
     g_test_add_func("/ui/cairo_squircle_render", test_cairo_squircle_render);
     int res = g_test_run();
     remove_dir_recursive(base_tmp);
