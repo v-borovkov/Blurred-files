@@ -166,7 +166,6 @@ static GList *duplicate_string_list(GList *list)
 
 void record_undo_action(AppState *state, UndoType type, GList *src_paths, GList *dst_paths)
 {
-    // Clear redo history when a new operation occurs
     g_list_free_full(state->redo_stack, (GDestroyNotify)free_undo_action);
     state->redo_stack = NULL;
 
@@ -304,13 +303,13 @@ void perform_undo(AppState *state)
                     g_free(base);
                     any_changed = TRUE;
                 }
+
                 g_object_unref(f_trash);
                 g_object_unref(f_orig);
             }
             g_free(trashed_path);
         }
     }
-
     if (any_changed)
     {
         state->redo_stack = g_list_prepend(state->redo_stack, act);
@@ -324,17 +323,13 @@ void perform_undo(AppState *state)
         free_undo_action(act);
     }
 }
-
 void perform_redo(AppState *state)
 {
     if (!state->redo_stack)
         return;
-
     UndoAction *act = (UndoAction *)state->redo_stack->data;
     state->redo_stack = g_list_delete_link(state->redo_stack, state->redo_stack);
-
     gboolean any_changed = FALSE;
-
     if (act->type == UNDO_DELETE_COPIES)
     {
         GList *s = act->src_paths;
@@ -397,9 +392,7 @@ void perform_redo(AppState *state)
             }
         }
     }
-
     (void)duplicate_string_list;
-
     if (any_changed)
     {
         state->undo_stack = g_list_prepend(state->undo_stack, act);
@@ -413,18 +406,15 @@ void perform_redo(AppState *state)
         free_undo_action(act);
     }
 }
-
 /* --- Copy / Cut / Paste --- */
 void bulk_copy_selected_items(AppState *state, gboolean is_cut)
 {
     GList *paths = get_selected_paths(state);
     if (!paths)
         return;
-
     g_list_free_full(state->clipboard_paths, g_free);
     state->clipboard_paths = paths;
     state->clipboard_is_cut = is_cut;
-
     GString *joined = g_string_new(NULL);
     for (GList *l = paths; l != NULL; l = l->next)
     {
@@ -444,12 +434,10 @@ static char *build_unique_destination_path(const char *dest_dir, const char *bas
         return candidate;
     }
     g_free(candidate);
-
     const char *dot = strrchr(basename, '.');
     gboolean has_ext = (dot != NULL && dot != basename);
     char *stem = has_ext ? g_strndup(basename, (gsize)(dot - basename)) : g_strdup(basename);
     const char *ext = has_ext ? dot : "";
-
     for (int i = 1; i < 1000; i++)
     {
         char *alt_name = g_strdup_printf("%s (copy %d)%s", stem, i, ext);
@@ -462,7 +450,6 @@ static char *build_unique_destination_path(const char *dest_dir, const char *bas
         }
         g_free(candidate);
     }
-
     g_free(stem);
     return g_build_filename(dest_dir, basename, NULL);
 }
@@ -770,47 +757,42 @@ static void clear_directory_contents(const char *dir_path)
 static void empty_trash_thread_func(GTask *task,
                                     gpointer source_object,
                                     gpointer task_data,
-                                    GCancellable *cancellable) {
+                                    GCancellable *cancellable)
+{
     (void)source_object;
     (void)task_data;
     (void)cancellable;
-
     char *trash_files = g_build_filename(g_get_user_data_dir(), "Trash", "files", NULL);
-    char *trash_info  = g_build_filename(g_get_user_data_dir(), "Trash", "info", NULL);
-
+    char *trash_info = g_build_filename(g_get_user_data_dir(), "Trash", "info", NULL);
     clear_directory_contents(trash_files);
     clear_directory_contents(trash_info);
-
     g_free(trash_files);
     g_free(trash_info);
-
     g_task_return_boolean(task, TRUE);
 }
-
 static void on_empty_trash_finished(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
-    (void)source_object;
     (void)res;
+    GtkWidget *window = GTK_WIDGET(source_object);
     AppState *state = (AppState *)user_data;
-    if (state && state->current_path && GTK_IS_WIDGET(state->flowbox))
+    if (GTK_IS_WINDOW(window) && gtk_widget_get_root(window) != NULL &&
+        state && state->current_path && GTK_IS_WIDGET(state->flowbox))
     {
         populate_directory(state, state->current_path);
     }
 }
-
 void empty_trash_completely(AppState *state)
 {
-    if (!state)
+    if (!state || !state->window)
         return;
-
-    GTask *task = g_task_new(NULL, NULL, on_empty_trash_finished, state);
+    GTask *task = g_task_new(state->window, NULL, on_empty_trash_finished, state);
     g_task_run_in_thread(task, empty_trash_thread_func);
     g_object_unref(task);
 }
 /* --- Archive Compression & Extraction (.zip / .tar.gz) --- */
 static void on_archive_subprocess_done(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
-    AppState *state = (AppState *)user_data;
+    GtkWidget *window = GTK_WIDGET(user_data);
     GSubprocess *proc = G_SUBPROCESS(source_object);
     GError *err = NULL;
     if (!g_subprocess_wait_check_finish(proc, res, &err))
@@ -821,14 +803,19 @@ static void on_archive_subprocess_done(GObject *source_object, GAsyncResult *res
             g_error_free(err);
         }
     }
-    if (state->current_path)
+    if (GTK_IS_WINDOW(window) && gtk_widget_get_root(window) != NULL)
     {
-        populate_directory(state, state->current_path);
+        AppState *state = (AppState *)g_object_get_data(G_OBJECT(window), "app-state");
+        if (state && state->current_path && GTK_IS_WIDGET(state->flowbox))
+        {
+            populate_directory(state, state->current_path);
+        }
     }
+    g_object_unref(window);
 }
 void bulk_compress_selected_items(AppState *state, gboolean use_tar_gz)
 {
-    if (!state->current_path)
+    if (!state || !state->current_path || !state->window)
         return;
     GList *paths = get_selected_paths(state);
     if (!paths)
@@ -844,17 +831,25 @@ void bulk_compress_selected_items(AppState *state, gboolean use_tar_gz)
     {
         g_ptr_array_add(argv, g_strdup("tar"));
         g_ptr_array_add(argv, g_strdup("-czf"));
-        g_ptr_array_add(argv, g_strdup(final_archive_base));
+        g_ptr_array_add(argv, g_strdup_printf("./%s", final_archive_base));
+        for (GList *l = paths; l != NULL; l = l->next)
+        {
+            char *item_base = g_path_get_basename((const char *)l->data);
+            g_ptr_array_add(argv, g_strdup_printf("./%s", item_base));
+            g_free(item_base);
+        }
     }
     else
     {
         g_ptr_array_add(argv, g_strdup("zip"));
         g_ptr_array_add(argv, g_strdup("-r"));
-        g_ptr_array_add(argv, g_strdup(final_archive_base));
-    }
-    for (GList *l = paths; l != NULL; l = l->next)
-    {
-        g_ptr_array_add(argv, g_path_get_basename((const char *)l->data));
+        g_ptr_array_add(argv, g_strdup_printf("./%s", final_archive_base));
+        for (GList *l = paths; l != NULL; l = l->next)
+        {
+            char *item_base = g_path_get_basename((const char *)l->data);
+            g_ptr_array_add(argv, g_strdup_printf("./%s", item_base));
+            g_free(item_base);
+        }
     }
     g_ptr_array_add(argv, NULL);
     GSubprocessLauncher *launcher = g_subprocess_launcher_new(G_SUBPROCESS_FLAGS_NONE);
@@ -863,7 +858,7 @@ void bulk_compress_selected_items(AppState *state, gboolean use_tar_gz)
     GSubprocess *proc = g_subprocess_launcher_spawnv(launcher, (const char *const *)argv->pdata, &err);
     if (proc)
     {
-        g_subprocess_wait_check_async(proc, NULL, on_archive_subprocess_done, state);
+        g_subprocess_wait_check_async(proc, NULL, on_archive_subprocess_done, g_object_ref(state->window));
         g_object_unref(proc);
     }
     else if (err)
@@ -881,7 +876,7 @@ void bulk_compress_selected_items(AppState *state, gboolean use_tar_gz)
 }
 void bulk_extract_selected_archives(AppState *state)
 {
-    if (!state->current_path)
+    if (!state || !state->current_path || !state->window)
         return;
     GList *paths = get_selected_paths(state);
     if (!paths)
@@ -895,7 +890,7 @@ void bulk_extract_selected_archives(AppState *state)
         {
             g_ptr_array_add(argv, g_strdup("unzip"));
             g_ptr_array_add(argv, g_strdup("-o"));
-            g_ptr_array_add(argv, g_strdup(base));
+            g_ptr_array_add(argv, g_strdup_printf("./%s", base));
         }
         else if (g_str_has_suffix(base, ".tar.gz") ||
                  g_str_has_suffix(base, ".tgz") ||
@@ -905,7 +900,7 @@ void bulk_extract_selected_archives(AppState *state)
         {
             g_ptr_array_add(argv, g_strdup("tar"));
             g_ptr_array_add(argv, g_strdup("-xf"));
-            g_ptr_array_add(argv, g_strdup(base));
+            g_ptr_array_add(argv, g_strdup_printf("./%s", base));
         }
         else
         {
@@ -920,7 +915,7 @@ void bulk_extract_selected_archives(AppState *state)
         GSubprocess *proc = g_subprocess_launcher_spawnv(launcher, (const char *const *)argv->pdata, &err);
         if (proc)
         {
-            g_subprocess_wait_check_async(proc, NULL, on_archive_subprocess_done, state);
+            g_subprocess_wait_check_async(proc, NULL, on_archive_subprocess_done, g_object_ref(state->window));
             g_object_unref(proc);
         }
         else if (err)
@@ -934,13 +929,11 @@ void bulk_extract_selected_archives(AppState *state)
     }
     g_list_free_full(paths, g_free);
 }
-
 /* --- Open Directory in Terminal --- */
 void open_directory_in_terminal(const char *dir_path)
 {
     if (!dir_path || !g_file_test(dir_path, G_FILE_TEST_IS_DIR))
         return;
-
     const char *env_term = g_getenv("TERMINAL");
     const char *candidates[] = {
         env_term,
@@ -954,13 +947,11 @@ void open_directory_in_terminal(const char *dir_path)
         "xfce4-terminal",
         "xterm",
         NULL};
-
     for (int i = 0; i < (int)G_N_ELEMENTS(candidates) - 1; i++)
     {
         const char *term = candidates[i];
         if (!term || *term == '\0')
             continue;
-
         char *found = g_find_program_in_path(term);
         if (found != NULL)
         {
@@ -980,6 +971,5 @@ void open_directory_in_terminal(const char *dir_path)
             g_free(found);
         }
     }
-
     g_warning("No supported terminal emulator found in PATH.");
 }

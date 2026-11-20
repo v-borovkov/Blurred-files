@@ -1,0 +1,134 @@
+name: Sanitizer CI & Release Packages
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  sanitizer-and-tests:
+    name: ASan + UBSan Build & Headless Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install GTK4, Archive Tools, Cppcheck & Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libgtk-4-dev \
+            zip \
+            unzip \
+            tar \
+            cppcheck \
+            xvfb
+
+      - name: Run Cppcheck Static Analysis
+        run: |
+          cppcheck --enable=warning,performance,portability \
+            --error-exitcode=1 \
+            --suppress=missingIncludeSystem \
+            src/
+
+      - name: Build with ASan + UBSan
+        run: |
+          make sanitize -j"$(nproc)"
+
+      - name: Run Automated Tests under Sanitizers
+        env:
+          GTK_A11Y: "none"
+          ASAN_OPTIONS: "halt_on_error=1:abort_on_error=1"
+          UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
+        run: |
+          make test
+
+  build-deb:
+    name: Build Debian/Ubuntu (.deb)
+    needs: sanitizer-and-tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-4-dev dpkg-dev
+
+      - name: Build .deb Package
+        run: |
+          chmod +x build_deb.sh
+          ./build_deb.sh
+
+      - name: Upload .deb Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: blurred-files-deb
+          path: blurred-files_*.deb
+
+  build-rpm:
+    name: Build openSUSE Tumbleweed (.rpm)
+    needs: sanitizer-and-tests
+    runs-on: ubuntu-latest
+    container:
+      image: opensuse/tumbleweed:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Tumbleweed Build Dependencies
+        run: |
+          zypper --non-interactive refresh
+          zypper --non-interactive install -y \
+            gcc \
+            make \
+            pkgconf-pkg-config \
+            gtk4-devel \
+            rpm-build \
+            tar \
+            gzip \
+            desktop-file-utils \
+            gtk4-tools
+
+      - name: Build .rpm Package
+        run: |
+          chmod +x build_rpm.sh
+          ./build_rpm.sh
+          mkdir -p dist-rpm
+          cp ~/rpmbuild/RPMS/*/*.rpm dist-rpm/
+
+      - name: Upload .rpm Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: blurred-files-tumbleweed-rpm
+          path: dist-rpm/*.rpm
+
+  publish-release:
+    name: Publish GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-deb, build-rpm]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download All Built Packages
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create GitHub Release with .deb & .rpm
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release-assets/*

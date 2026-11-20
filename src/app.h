@@ -162,5 +162,6 @@ void toggle_pin_folder(AppState *state, const char *path);
 
 /* ui_main.c */
 void activate_app(GtkApplication *app, gpointer user_data);
+void activate_app_with_path(GtkApplication *app, const char *initial_path);
 
 #endif /* APP_H */

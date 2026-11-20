@@ -157,13 +157,14 @@ static void on_window_border_pressed(GtkGestureClick *gesture, int n_press, doub
 }
 
 /* --- Adaptive Header Padding on Ultra-Wide Windows --- */
-static void on_bg_canvas_resized(GtkDrawingArea *area, int width, int height, gpointer user_data) {
+static void on_bg_canvas_resized(GtkDrawingArea *area, int width, int height, gpointer user_data)
+{
     (void)height;
     GtkWidget *header_box = GTK_WIDGET(user_data);
     GtkWidget *window = gtk_widget_get_ancestor(GTK_WIDGET(area), GTK_TYPE_WINDOW);
     gboolean is_max = (window && GTK_IS_WINDOW(window))
-        ? gtk_window_is_maximized(GTK_WINDOW(window))
-        : FALSE;
+                          ? gtk_window_is_maximized(GTK_WINDOW(window))
+                          : FALSE;
 
     int extra = (!is_max && width > 1200) ? MIN(140, (width - 1200) / 6) : 0;
     gtk_widget_set_margin_start(header_box, extra);
@@ -332,9 +333,9 @@ static void on_maximize_clicked(GtkButton *btn, GtkWindow *window)
 static void on_close_clicked(GtkButton *btn, GtkWindow *window)
 {
     (void)btn;
+
     gtk_window_close(window);
 }
-
 /* --- Root "/" Button & Copy Current Path on Right-Click --- */
 static void on_root_slash_clicked(GtkButton *btn, gpointer user_data)
 {
@@ -827,9 +828,8 @@ static gboolean on_window_key_pressed(GtkEventControllerKey *controller,
     return FALSE;
 }
 /* --- Main Application Window Assembly --- */
-void activate_app(GtkApplication *app, gpointer user_data)
+void activate_app_with_path(GtkApplication *app, const char *initial_path)
 {
-    (void)user_data;
     g_clear_weak_pointer(&last_resize_hovered_widget);
     GtkCssProvider *provider = gtk_css_provider_new();
     if (g_file_test("src/bfiles.css", G_FILE_TEST_EXISTS))
@@ -1138,6 +1138,14 @@ void activate_app(GtkApplication *app, gpointer user_data)
     gtk_box_append(GTK_BOX(content_pane), status_bar);
     gtk_box_append(GTK_BOX(main_hbox), content_pane);
     gtk_overlay_add_overlay(GTK_OVERLAY(overlay), main_hbox);
-    navigate_to_path(state, g_get_home_dir(), FALSE);
+    const char *start_dir = (initial_path && g_file_test(initial_path, G_FILE_TEST_IS_DIR))
+                                ? initial_path
+                                : g_get_home_dir();
+    navigate_to_path(state, start_dir, FALSE);
     gtk_window_present(GTK_WINDOW(window));
+}
+void activate_app(GtkApplication *app, gpointer user_data)
+{
+    (void)user_data;
+    activate_app_with_path(app, NULL);
 }
