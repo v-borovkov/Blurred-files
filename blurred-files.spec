@@ -1,5 +1,5 @@
 Name:           blurred-files
-Version:        1.0.0
+Version:        0.7.0
 Release:        1%{?dist}
 Summary:        Fast, lightweight GTK4 file manager with superellipse UI
 

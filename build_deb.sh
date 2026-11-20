@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PKG_NAME="blurred-files"
-VERSION="1.0.0"
+VERSION="0.7.0"
 ARCH="$(dpkg --print-architecture 2>/dev/null || echo amd64)"
 STAGE_DIR="pkg_deb"
 OUT_DEB="${PKG_NAME}_${VERSION}_${ARCH}.deb"
