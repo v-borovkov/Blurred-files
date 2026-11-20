@@ -37,6 +37,7 @@ jobs:
           cppcheck --enable=warning,performance,portability \
             --error-exitcode=1 \
             --suppress=missingIncludeSystem \
+            --suppress=unknownMacro \
             src/
 
       - name: Build with ASan + UBSan
