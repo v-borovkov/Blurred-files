@@ -25,7 +25,7 @@ all: $(TARGET)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET) $(LDFLAGS)
 	$(STRIP) --strip-unneeded $(TARGET)
 
@@ -37,7 +37,7 @@ sanitize: LDFLAGS += $(ASAN_FLAGS)
 sanitize: STRIP = true
 sanitize: clean $(TARGET) $(BUILD_DIR)/test_runner
 
-$(BUILD_DIR)/test_runner: tests/test_main.c $(TEST_OBJS)
+$(BUILD_DIR)/test_runner: tests/test_main.c $(TEST_OBJS) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(ASAN_FLAGS) $^ -o $@ $(LDFLAGS) $(ASAN_FLAGS)
 
 test: $(BUILD_DIR)/test_runner

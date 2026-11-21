@@ -201,6 +201,23 @@ static GtkWidget *make_menu_btn(const char *label, gboolean is_danger, GCallback
     return btn;
 }
 
+static void on_ctx_open_new_window_clicked(GtkButton *btn, gpointer user_data)
+{
+    ItemData *id = (ItemData *)user_data;
+    GtkWidget *popover = gtk_widget_get_ancestor(GTK_WIDGET(btn), GTK_TYPE_POPOVER);
+    if (popover)
+        gtk_popover_popdown(GTK_POPOVER(popover));
+
+    if (!id || !id->is_dir || !id->full_path)
+        return;
+
+    const char *exe = g_file_test("./build/blurred_files", G_FILE_TEST_IS_EXECUTABLE)
+                          ? "./build/blurred_files"
+                          : "blurred_files";
+    const char *argv[] = {exe, id->full_path, NULL};
+    g_spawn_async(NULL, (char **)argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
+}
+
 static void on_item_right_clicked(GtkGestureClick *gesture, int n_press, double x, double y, gpointer user_data)
 {
     (void)gesture;
@@ -274,6 +291,10 @@ static void on_item_right_clicked(GtkGestureClick *gesture, int n_press, double 
         gtk_box_append(GTK_BOX(menu_box), make_menu_btn("Open", FALSE, G_CALLBACK(on_ctx_open_clicked), id));
         if (id->is_dir)
         {
+            if (!id->state->is_desktop_mode)
+            {
+                gtk_box_append(GTK_BOX(menu_box), make_menu_btn("Open in New Window", FALSE, G_CALLBACK(on_ctx_open_new_window_clicked), id));
+            }
             gtk_box_append(GTK_BOX(menu_box), make_menu_btn("Open in Terminal", FALSE, G_CALLBACK(on_ctx_open_terminal_clicked), id));
             if (!id->state->is_desktop_mode)
             {

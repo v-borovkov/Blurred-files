@@ -720,21 +720,63 @@ window.desktop-mode-window,
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.65);
 }
 
+/* Frosted Glass Cards for Desktop Mode Icons (Matching Blurred Launcher) */
 button.file-card-btn.desktop-file-card {
-    background: transparent;
-    border: 1px solid transparent;
-    box-shadow: none;
-    border-radius: 14px;
-    padding: 8px 6px;
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.22) 0%,
+        rgba(255, 255, 255, 0.11) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.26);
+    border-top-color: rgba(255, 255, 255, 0.42);
+    border-radius: 20px;
+    padding: 10px 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    transition: transform 150ms cubic-bezier(0.2, 0.9, 0.3, 1.0),
+                background-image 150ms ease,
+                border-color 150ms ease,
+                box-shadow 150ms ease;
 }
 
 button.file-card-btn.desktop-file-card:hover {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.24);
+    transform: translateY(-3px) scale(1.03);
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.36) 0%,
+        rgba(255, 255, 255, 0.20) 100%
+    );
+    border-color: rgba(255, 168, 82, 0.78);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26),
+                0 0 12px rgba(255, 138, 43, 0.28),
+                inset 0 1px 0 rgba(255, 255, 255, 0.48);
 }
 
 button.file-card-btn.desktop-file-card.selected {
-    background: rgba(90, 165, 255, 0.32);
-    border-color: rgba(130, 195, 255, 0.65);
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 168, 82, 0.34) 0%,
+        rgba(255, 138, 43, 0.18) 100%
+    );
+    border-color: rgba(255, 138, 43, 0.92);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24),
+                0 0 14px rgba(255, 138, 43, 0.38),
+                inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+label.desktop-file-label {
+    color: #f3f5f8;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.70);
+}
+
+button.file-card-btn.desktop-file-card .file-card,
+button.file-card-btn.desktop-file-card:hover .file-card,
+button.file-card-btn.desktop-file-card.selected .file-card {
+    background: transparent;
+    background-color: transparent;
+    background-image: none;
+    border: none;
+    box-shadow: none;
 }
 

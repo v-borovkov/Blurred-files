@@ -10,6 +10,55 @@ typedef struct
 } SidebarBtnData;
 
 
+static const char *get_sidebar_folder_icon_name(const char *path)
+{
+    if (!path)
+        return "folder-symbolic";
+
+    const char *home = g_get_home_dir();
+    if (home && g_strcmp0(path, home) == 0)
+        return "user-home-symbolic";
+
+    if (g_strcmp0(path, g_get_user_special_dir(G_USER_DIRECTORY_DESKTOP)) == 0)
+        return "user-desktop-symbolic";
+    if (g_strcmp0(path, g_get_user_special_dir(G_USER_DIRECTORY_DOCUMENTS)) == 0)
+        return "folder-documents-symbolic";
+    if (g_strcmp0(path, g_get_user_special_dir(G_USER_DIRECTORY_DOWNLOAD)) == 0)
+        return "folder-download-symbolic";
+    if (g_strcmp0(path, g_get_user_special_dir(G_USER_DIRECTORY_MUSIC)) == 0)
+        return "folder-music-symbolic";
+    if (g_strcmp0(path, g_get_user_special_dir(G_USER_DIRECTORY_PICTURES)) == 0)
+        return "folder-pictures-symbolic";
+    if (g_strcmp0(path, g_get_user_special_dir(G_USER_DIRECTORY_VIDEOS)) == 0)
+        return "folder-videos-symbolic";
+    if (g_strcmp0(path, g_get_user_special_dir(G_USER_DIRECTORY_TEMPLATES)) == 0)
+        return "folder-templates-symbolic";
+    if (g_strcmp0(path, g_get_user_special_dir(G_USER_DIRECTORY_PUBLIC_SHARE)) == 0)
+        return "folder-publicshare-symbolic";
+
+    /* Fallback basename matching for standard English folder names or hidden/config dirs */
+    char *base = g_path_get_basename(path);
+    const char *icon = "folder-symbolic";
+
+    if (g_ascii_strcasecmp(base, "Desktop") == 0)
+        icon = "user-desktop-symbolic";
+    else if (g_ascii_strcasecmp(base, "Documents") == 0)
+        icon = "folder-documents-symbolic";
+    else if (g_ascii_strcasecmp(base, "Downloads") == 0)
+        icon = "folder-download-symbolic";
+    else if (g_ascii_strcasecmp(base, "Music") == 0)
+        icon = "folder-music-symbolic";
+    else if (g_ascii_strcasecmp(base, "Pictures") == 0)
+        icon = "folder-pictures-symbolic";
+    else if (g_ascii_strcasecmp(base, "Videos") == 0)
+        icon = "folder-videos-symbolic";
+    else if (g_strcmp0(base, ".config") == 0 || g_strcmp0(base, ".themes") == 0)
+        icon = "emblem-system-symbolic";
+
+    g_free(base);
+    return icon;
+}
+
 /* --- Pinned Folders Helpers --- */
 gboolean is_folder_pinned(AppState *state, const char *path)
 {
@@ -183,6 +232,32 @@ static void on_unmount_menu_clicked(GtkButton *btn, gpointer user_data)
     }
 }
 
+static void on_open_new_window_menu_clicked(GtkButton *btn, gpointer user_data)
+{
+    SidebarBtnData *sbd = (SidebarBtnData *)user_data;
+    GtkWidget *popover = gtk_widget_get_ancestor(GTK_WIDGET(btn), GTK_TYPE_POPOVER);
+    if (popover)
+        gtk_popover_popdown(GTK_POPOVER(popover));
+
+    if (!sbd || !sbd->target_path || !g_file_test(sbd->target_path, G_FILE_TEST_IS_DIR))
+        return;
+
+    const char *prog = g_get_prgname();
+    if (!prog || *prog == '\0')
+        prog = "blurred_files";
+
+    const char *argv[] = {prog, sbd->target_path, NULL};
+    GError *err = NULL;
+    if (!g_spawn_async(NULL, (char **)argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &err))
+    {
+        if (err)
+        {
+            g_warning("Failed to open new window for %s: %s", sbd->target_path, err->message);
+            g_error_free(err);
+        }
+    }
+}
+
 static void on_sidebar_item_right_clicked(GtkGestureClick *gesture, int n_press, double x, double y, gpointer user_data)
 {
     (void)n_press;
@@ -190,10 +265,11 @@ static void on_sidebar_item_right_clicked(GtkGestureClick *gesture, int n_press,
     if (!sbd || !sbd->state)
         return;
 
+    gboolean has_dir = (sbd->target_path && g_file_test(sbd->target_path, G_FILE_TEST_IS_DIR));
     gboolean is_pinned = (sbd->target_path && is_folder_pinned(sbd->state, sbd->target_path));
     gboolean can_unmount = (sbd->mount != NULL && g_mount_can_unmount(sbd->mount));
 
-    if (!is_pinned && !can_unmount)
+    if (!has_dir && !is_pinned && !can_unmount)
         return;
 
     GtkWidget *btn = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
@@ -207,6 +283,14 @@ static void on_sidebar_item_right_clicked(GtkGestureClick *gesture, int n_press,
 
     GtkWidget *menu_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
     gtk_widget_add_css_class(menu_box, "context-menu-box");
+
+    if (has_dir)
+    {
+        GtkWidget *btn_new_win = gtk_button_new_with_label("Open in New Window");
+        gtk_widget_add_css_class(btn_new_win, "context-menu-btn");
+        g_signal_connect(btn_new_win, "clicked", G_CALLBACK(on_open_new_window_menu_clicked), sbd);
+        gtk_box_append(GTK_BOX(menu_box), btn_new_win);
+    }
 
     if (is_pinned)
     {
@@ -227,7 +311,6 @@ static void on_sidebar_item_right_clicked(GtkGestureClick *gesture, int n_press,
     gtk_popover_set_child(GTK_POPOVER(popover), menu_box);
     gtk_popover_popup(GTK_POPOVER(popover));
 }
-
 /* --- Drag-and-Drop onto Sidebar Bookmarks & Trash --- */
 static GdkDragAction on_sidebar_drop_enter(GtkDropTarget *target, double x, double y, gpointer user_data)
 {
@@ -283,7 +366,8 @@ static GtkWidget *create_sidebar_place_button(AppState *state,
                                               GIcon *gicon,
                                               const char *target_path,
                                               GVolume *volume,
-                                              GMount *mount) {
+                                              GMount *mount)
+{
     GtkWidget *btn = gtk_button_new();
     gtk_widget_add_css_class(btn, "sidebar-btn");
     gtk_widget_set_halign(btn, GTK_ALIGN_CENTER);
@@ -291,9 +375,19 @@ static GtkWidget *create_sidebar_place_button(AppState *state,
     GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
     gtk_widget_set_halign(vbox, GTK_ALIGN_CENTER);
 
-    GtkWidget *icon = gicon
-        ? gtk_image_new_from_gicon(gicon)
-        : gtk_image_new_from_icon_name(icon_name ? icon_name : "folder-symbolic");
+    GtkWidget *icon = NULL;
+    if (gicon)
+    {
+        icon = gtk_image_new_from_gicon(gicon);
+    }
+    else if (icon_name && g_strcmp0(icon_name, "folder-symbolic") != 0)
+    {
+        icon = gtk_image_new_from_icon_name(icon_name);
+    }
+    else
+    {
+        icon = gtk_image_new_from_icon_name(get_sidebar_folder_icon_name(target_path));
+    }
     gtk_image_set_pixel_size(GTK_IMAGE(icon), 20);
 
     GtkWidget *lbl = gtk_label_new(label_text);
@@ -311,7 +405,8 @@ static GtkWidget *create_sidebar_place_button(AppState *state,
     sbd->volume = volume ? g_object_ref(volume) : NULL;
     sbd->mount = mount ? g_object_ref(mount) : NULL;
 
-    if (target_path) {
+    if (target_path)
+    {
         g_object_set_data_full(G_OBJECT(btn), "sidebar-path", g_strdup(target_path), g_free);
     }
 
@@ -322,8 +417,9 @@ static GtkWidget *create_sidebar_place_button(AppState *state,
     g_signal_connect(rclick, "pressed", G_CALLBACK(on_sidebar_item_right_clicked), sbd);
     gtk_widget_add_controller(btn, GTK_EVENT_CONTROLLER(rclick));
 
-    if (target_path) {
-        GType drop_types[] = { GDK_TYPE_FILE_LIST, G_TYPE_FILE };
+    if (target_path)
+    {
+        GType drop_types[] = {GDK_TYPE_FILE_LIST, G_TYPE_FILE};
         GtkDropTarget *drop_tgt = gtk_drop_target_new(G_TYPE_INVALID, GDK_ACTION_MOVE | GDK_ACTION_COPY);
         gtk_drop_target_set_gtypes(drop_tgt, drop_types, G_N_ELEMENTS(drop_types));
         g_signal_connect(drop_tgt, "enter", G_CALLBACK(on_sidebar_drop_enter), sbd);
