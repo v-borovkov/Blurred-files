@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           blurred-files
-Version:        0.7.0
+Version:        %{?_version}%{!?_version:0.7.1}
 Release:        1%{?dist}
 Summary:        Fast, lightweight GTK4 file manager with superellipse UI
 
