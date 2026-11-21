@@ -27,11 +27,12 @@ Version: ${VERSION}
 Section: utils
 Priority: optional
 Architecture: ${ARCH}
-Depends: libgtk-4-1, libglib2.0-0, libcairo2, zip, unzip, tar, xdg-utils
+Depends: libgtk-4-1, libgtk4-layer-shell0, libglib2.0-0, libcairo2, zip, unzip, tar, xdg-utils
 Maintainer: v-borovkov <v-borovkov@://github.com>
-Description: Fast, lightweight GTK4 file manager with superellipse UI
+Description: Fast, lightweight GTK4 file manager with superellipse UI & Wayland desktop mode
  A custom GTK4 file manager written in C featuring a superellipse silhouette,
- translucent Wayfire-blurred sidebar, and tactile Neumorphic header controls.
+ translucent Wayfire-blurred sidebar, Neumorphic header controls, and a
+ wlr-layer-shell --desktop mode.
 EOF
 
 cat > "$STAGE_DIR/DEBIAN/postinst" <<'EOF'

@@ -101,6 +101,8 @@ static gboolean scroll_breadcrumbs_to_end_cb(gpointer user_data)
 
 static void update_breadcrumbs(AppState *state, const char *path)
 {
+    if (!state->breadcrumb_box)
+        return;
     GtkWidget *child;
     while ((child = gtk_widget_get_first_child(state->breadcrumb_box)) != NULL)
     {
@@ -381,12 +383,25 @@ void populate_directory(AppState *state, const char *path) {
         gtk_flow_box_set_min_children_per_line(GTK_FLOW_BOX(state->flowbox), 1);
         gtk_flow_box_set_row_spacing(GTK_FLOW_BOX(state->flowbox), 6);
     } else {
-        gtk_widget_set_halign(state->flowbox, GTK_ALIGN_FILL);
-        gtk_flow_box_set_homogeneous(GTK_FLOW_BOX(state->flowbox), TRUE);
-        gtk_flow_box_set_min_children_per_line(GTK_FLOW_BOX(state->flowbox), 1);
-        gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(state->flowbox), 20);
-        gtk_flow_box_set_column_spacing(GTK_FLOW_BOX(state->flowbox), 12);
-        gtk_flow_box_set_row_spacing(GTK_FLOW_BOX(state->flowbox), 14);
+        if (state->is_desktop_mode) {
+            gtk_orientable_set_orientation(GTK_ORIENTABLE(state->flowbox), GTK_ORIENTATION_VERTICAL);
+            gtk_widget_set_halign(state->flowbox, GTK_ALIGN_START);
+            gtk_widget_set_valign(state->flowbox, GTK_ALIGN_FILL);
+            gtk_flow_box_set_homogeneous(GTK_FLOW_BOX(state->flowbox), TRUE);
+            gtk_flow_box_set_min_children_per_line(GTK_FLOW_BOX(state->flowbox), 1);
+            gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(state->flowbox), 12);
+            gtk_flow_box_set_column_spacing(GTK_FLOW_BOX(state->flowbox), 16);
+            gtk_flow_box_set_row_spacing(GTK_FLOW_BOX(state->flowbox), 14);
+        } else {
+            gtk_orientable_set_orientation(GTK_ORIENTABLE(state->flowbox), GTK_ORIENTATION_HORIZONTAL);
+            gtk_widget_set_halign(state->flowbox, GTK_ALIGN_FILL);
+            gtk_widget_set_valign(state->flowbox, GTK_ALIGN_START);
+            gtk_flow_box_set_homogeneous(GTK_FLOW_BOX(state->flowbox), TRUE);
+            gtk_flow_box_set_min_children_per_line(GTK_FLOW_BOX(state->flowbox), 1);
+            gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(state->flowbox), 20);
+            gtk_flow_box_set_column_spacing(GTK_FLOW_BOX(state->flowbox), 12);
+            gtk_flow_box_set_row_spacing(GTK_FLOW_BOX(state->flowbox), 14);
+        }
     }
 
     GtkWidget *child;
@@ -417,7 +432,9 @@ void populate_directory(AppState *state, const char *path) {
         return;
     }
 
-    const char *raw_query = gtk_editable_get_text(GTK_EDITABLE(state->search_entry));
+    const char *raw_query = state->search_entry
+                                ? gtk_editable_get_text(GTK_EDITABLE(state->search_entry))
+                                : NULL;
     char *query_lower = (raw_query && *raw_query != '\0') ? g_utf8_strdown(raw_query, -1) : NULL;
 
     GList *entries = NULL;

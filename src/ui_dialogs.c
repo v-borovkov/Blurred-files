@@ -841,29 +841,31 @@ void show_properties_dialog(AppState *state, const char *path)
     gtk_window_present(GTK_WINDOW(dialog));
 }
 /* --- Squircle Preferences / Settings Dialog (Includes Icon & List Sorting) --- */
-static void on_settings_hidden_toggled(GtkSwitch *sw, gboolean state_val, gpointer user_data)
+static void on_settings_hidden_toggled(GObject *sw, GParamSpec *pspec, gpointer user_data)
 {
-    (void)sw;
+    (void)pspec;
     AppState *state = (AppState *)user_data;
-    state->show_hidden = state_val;
+    state->show_hidden = gtk_switch_get_active(GTK_SWITCH(sw));
     save_app_settings(state);
     if (state->current_path)
         populate_directory(state, state->current_path);
 }
-static void on_settings_thumbs_toggled(GtkSwitch *sw, gboolean state_val, gpointer user_data)
+
+static void on_settings_thumbs_toggled(GObject *sw, GParamSpec *pspec, gpointer user_data)
 {
-    (void)sw;
+    (void)pspec;
     AppState *state = (AppState *)user_data;
-    state->enable_thumbnails = state_val;
+    state->enable_thumbnails = gtk_switch_get_active(GTK_SWITCH(sw));
     save_app_settings(state);
     if (state->current_path)
         populate_directory(state, state->current_path);
 }
-static void on_settings_dblclick_toggled(GtkSwitch *sw, gboolean state_val, gpointer user_data)
+
+static void on_settings_dblclick_toggled(GObject *sw, GParamSpec *pspec, gpointer user_data)
 {
-    (void)sw;
+    (void)pspec;
     AppState *state = (AppState *)user_data;
-    state->double_click_open = state_val;
+    state->double_click_open = gtk_switch_get_active(GTK_SWITCH(sw));
     save_app_settings(state);
     if (state->current_path)
         populate_directory(state, state->current_path);
@@ -945,7 +947,7 @@ static GtkWidget *add_settings_switch_row(GtkWidget *parent,
     GtkWidget *sw = gtk_switch_new();
     gtk_switch_set_active(GTK_SWITCH(sw), initial_val);
     gtk_widget_set_valign(sw, GTK_ALIGN_CENTER);
-    g_signal_connect(sw, "state-set", toggle_cb, state);
+    g_signal_connect(sw, "notify::active", toggle_cb, state);
     gtk_box_append(GTK_BOX(row), txt_box);
     gtk_box_append(GTK_BOX(row), sw);
     gtk_box_append(GTK_BOX(parent), row);

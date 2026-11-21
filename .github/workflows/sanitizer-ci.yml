@@ -19,13 +19,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install GTK4, Archive Tools, Cppcheck & Xvfb
+      - name: Install GTK4, Layer Shell, Archive Tools, Cppcheck & Xvfb
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
             pkg-config \
             libgtk-4-dev \
+            libgtk4-layer-shell-dev \
             zip \
             unzip \
             tar \
@@ -64,7 +65,12 @@ jobs:
       - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config libgtk-4-dev dpkg-dev
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libgtk-4-dev \
+            libgtk4-layer-shell-dev \
+            dpkg-dev
 
       - name: Build .deb Package
         run: |
@@ -96,6 +102,7 @@ jobs:
             make \
             pkgconf-pkg-config \
             gtk4-devel \
+            gtk4-layer-shell-devel \
             rpm-build \
             tar \
             gzip \

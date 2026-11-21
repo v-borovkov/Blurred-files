@@ -2,29 +2,14 @@
 set -euo pipefail
 
 NIGHTMARE_DIR="/tmp/blurred-nightmare"
-GTK_CFLAGS=$(pkg-config --cflags gtk4)
-GTK_LIBS=$(pkg-config --libs gtk4)
-DATADIR="/usr/local/share/blurred_files"
-SANITIZER_CFLAGS="-Wall -O1 -g -DDATADIR=\\\"$DATADIR\\\" $GTK_CFLAGS -fsanitize=address,undefined -fno-omit-frame-pointer"
-SANITIZER_LDFLAGS="$GTK_LIBS -lm -fsanitize=address,undefined"
 
-echo "=== [1/4] Building build/blurred_files & build/test_runner with ASan + UBSan ==="
-make clean
-make -j"$(nproc)" build/blurred_files build/test_runner \
-  CFLAGS="$SANITIZER_CFLAGS" \
-  LDFLAGS="$SANITIZER_LDFLAGS"
+echo "=== [1/4] Building Blurred-files & Test Runner with ASan + UBSan ==="
+make sanitize -j"$(nproc)"
 
-echo "=== [2/4] Running Automated Tests under Sanitizers (with your lsan.supp) ==="
-export GTK_A11Y=none
-export LSAN_OPTIONS="suppressions=tests/lsan.supp"
+echo "=== [2/4] Running Automated Tests under Sanitizers ==="
 export ASAN_OPTIONS="halt_on_error=1:abort_on_error=1"
 export UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=1"
-
-if command -v xvfb-run >/dev/null 2>&1; then
-    xvfb-run -a -s "-screen 0 1280x800x24" ./build/test_runner --verbose
-else
-    ./build/test_runner --verbose
-fi
+make test
 
 echo "=== [3/4] Generating Hostile Filesystem Fixture at $NIGHTMARE_DIR ==="
 chmod -R u+w "$NIGHTMARE_DIR" 2>/dev/null || true
@@ -65,8 +50,7 @@ fi
 touch "$NIGHTMARE_DIR/readonly_dir/locked_file.txt"
 chmod 555 "$NIGHTMARE_DIR/readonly_dir"
 
-echo "=== [4/4] Launching build/blurred_files in Chaos Mode ==="
-echo "Try: Rapid navigation, Ctrl+Z/Y while deleting files externally, extracting zip_slip_test.zip, and deleting readonly_dir."
+echo "=== [4/4] Launching build/blurred_files directly into $NIGHTMARE_DIR ==="
 ./build/blurred_files "$NIGHTMARE_DIR" || true
 
 # Cleanup permissions so /tmp can be cleaned normally

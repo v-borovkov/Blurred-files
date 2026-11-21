@@ -1,4 +1,5 @@
 #include "app.h"
+#include <string.h>
 
 static void on_open(GtkApplication *app,
                     GFile **files,
@@ -34,6 +35,25 @@ static void on_open(GtkApplication *app,
 int main(int argc, char **argv)
 {
     g_setenv("GSK_RENDERER", "gl", FALSE);
+
+    gboolean desktop_mode = FALSE;
+    for (int i = 1; i < argc; i++)
+    {
+        if (g_strcmp0(argv[i], "--desktop") == 0)
+        {
+            desktop_mode = TRUE;
+            break;
+        }
+    }
+
+    if (desktop_mode)
+    {
+        GtkApplication *app = gtk_application_new("com.github.blurredfiles.desktop", G_APPLICATION_DEFAULT_FLAGS);
+        g_signal_connect(app, "activate", G_CALLBACK(activate_desktop_mode), NULL);
+        int status = g_application_run(G_APPLICATION(app), 1, argv);
+        g_object_unref(app);
+        return status;
+    }
 
     GtkApplication *app = gtk_application_new("com.github.blurredfiles", G_APPLICATION_HANDLES_OPEN);
     g_signal_connect(app, "activate", G_CALLBACK(activate_app), NULL);

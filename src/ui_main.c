@@ -236,10 +236,10 @@ static void breadcrumb_fade_box_snapshot(GtkWidget *widget, GtkSnapshot *snapsho
                                         &GRAPHENE_POINT_INIT((float)w, 0.0f),
                                         stops,
                                         n_stops);
-    gtk_snapshot_pop(snapshot); /* End mask definition */
+    gtk_snapshot_pop(snapshot);
 
     gtk_widget_snapshot_child(widget, child, snapshot);
-    gtk_snapshot_pop(snapshot); /* Apply mask to child */
+    gtk_snapshot_pop(snapshot);
 }
 
 static void breadcrumb_fade_box_dispose(GObject *object)
@@ -303,14 +303,13 @@ static void on_window_mouse_nav_pressed(GtkGestureClick *gesture, int n_press, d
     }
 }
 
-/* --- Header Preferences Button --- */
+/* --- Header & Window Control Callbacks --- */
 static void on_header_settings_clicked(GtkButton *btn, gpointer user_data)
 {
     (void)btn;
     show_settings_dialog((AppState *)user_data);
 }
 
-/* --- Window Control Buttons --- */
 static void on_minimize_clicked(GtkButton *btn, GtkWindow *window)
 {
     (void)btn;
@@ -333,9 +332,9 @@ static void on_maximize_clicked(GtkButton *btn, GtkWindow *window)
 static void on_close_clicked(GtkButton *btn, GtkWindow *window)
 {
     (void)btn;
-
     gtk_window_close(window);
 }
+
 /* --- Root "/" Button & Copy Current Path on Right-Click --- */
 static void on_root_slash_clicked(GtkButton *btn, gpointer user_data)
 {
@@ -669,12 +668,12 @@ static gboolean on_grid_scroll_zoom(GtkEventControllerScroll *ctrl, double dx, d
     wheel_zoom_accum = 0.0;
     return FALSE;
 }
-/* --- Keyboard Shortcuts --- */
-static gboolean on_window_key_pressed(GtkEventControllerKey *controller,
-                                      guint keyval,
-                                      guint keycode,
-                                      GdkModifierType modifiers,
-                                      gpointer user_data)
+/* --- Shared Keyboard Shortcuts --- */
+gboolean on_window_key_pressed(GtkEventControllerKey *controller,
+                               guint keyval,
+                               guint keycode,
+                               GdkModifierType modifiers,
+                               gpointer user_data)
 {
     (void)controller;
     (void)keycode;
@@ -792,40 +791,102 @@ static gboolean on_window_key_pressed(GtkEventControllerKey *controller,
     }
     if (ctrl && (keyval == GDK_KEY_f || keyval == GDK_KEY_F))
     {
-        gtk_widget_grab_focus(state->search_entry);
-        return TRUE;
+        if (state->search_entry)
+        {
+            gtk_widget_grab_focus(state->search_entry);
+            return TRUE;
+        }
     }
     if (keyval == GDK_KEY_Escape)
     {
         clear_item_selection(state);
-        const char *txt = gtk_editable_get_text(GTK_EDITABLE(state->search_entry));
-        if (txt && *txt != '\0')
+        if (state->search_entry)
         {
-            gtk_editable_set_text(GTK_EDITABLE(state->search_entry), "");
+            const char *txt = gtk_editable_get_text(GTK_EDITABLE(state->search_entry));
+            if (txt && *txt != '\0')
+            {
+                gtk_editable_set_text(GTK_EDITABLE(state->search_entry), "");
+            }
         }
         return TRUE;
     }
-    if (alt && keyval == GDK_KEY_Left)
+    if (!state->is_desktop_mode)
     {
-        on_back_clicked(NULL, state);
-        return TRUE;
-    }
-    if (alt && keyval == GDK_KEY_Right)
-    {
-        on_fwd_clicked(NULL, state);
-        return TRUE;
-    }
-    if (keyval == GDK_KEY_BackSpace && !typing_in_entry)
-    {
-        if (state->current_path && g_strcmp0(state->current_path, "/") != 0)
+        if (alt && keyval == GDK_KEY_Left)
         {
-            char *parent = g_path_get_dirname(state->current_path);
-            navigate_to_path(state, parent, TRUE);
-            g_free(parent);
+            on_back_clicked(NULL, state);
             return TRUE;
+        }
+        if (alt && keyval == GDK_KEY_Right)
+        {
+            on_fwd_clicked(NULL, state);
+            return TRUE;
+        }
+        if (keyval == GDK_KEY_BackSpace && !typing_in_entry)
+        {
+            if (state->current_path && g_strcmp0(state->current_path, "/") != 0)
+            {
+                char *parent = g_path_get_dirname(state->current_path);
+                navigate_to_path(state, parent, TRUE);
+                g_free(parent);
+                return TRUE;
+            }
         }
     }
     return FALSE;
+}
+/* --- Shared File Grid & Marquee Overlay Builder --- */
+GtkWidget *build_file_grid_overlay(AppState *state)
+{
+    GtkWidget *grid_overlay = gtk_overlay_new();
+    gtk_widget_set_vexpand(grid_overlay, TRUE);
+    state->grid_overlay = grid_overlay;
+    GtkWidget *scrolled = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled), GTK_POLICY_EXTERNAL, GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_propagate_natural_width(GTK_SCROLLED_WINDOW(scrolled), FALSE);
+    gtk_widget_set_vexpand(scrolled, TRUE);
+    state->scrolled = scrolled;
+    GtkWidget *flowbox = gtk_flow_box_new();
+    gtk_widget_set_halign(flowbox, GTK_ALIGN_FILL);
+    gtk_widget_set_valign(flowbox, GTK_ALIGN_START);
+    gtk_widget_add_css_class(flowbox, "files-grid");
+    gtk_flow_box_set_homogeneous(GTK_FLOW_BOX(flowbox), TRUE);
+    gtk_flow_box_set_min_children_per_line(GTK_FLOW_BOX(flowbox), 1);
+    gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(flowbox), 20);
+    gtk_flow_box_set_row_spacing(GTK_FLOW_BOX(flowbox), 12);
+    gtk_flow_box_set_column_spacing(GTK_FLOW_BOX(flowbox), 12);
+    gtk_flow_box_set_selection_mode(GTK_FLOW_BOX(flowbox), GTK_SELECTION_NONE);
+    state->flowbox = flowbox;
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled), flowbox);
+    gtk_overlay_set_child(GTK_OVERLAY(grid_overlay), scrolled);
+    GtkWidget *selection_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_widget_add_css_class(selection_box, "selection-marquee");
+    gtk_widget_set_halign(selection_box, GTK_ALIGN_START);
+    gtk_widget_set_valign(selection_box, GTK_ALIGN_START);
+    gtk_widget_set_can_target(selection_box, FALSE);
+    gtk_widget_set_visible(selection_box, FALSE);
+    state->selection_box = selection_box;
+    gtk_overlay_add_overlay(GTK_OVERLAY(grid_overlay), selection_box);
+    GtkEventController *zoom_scroll = gtk_event_controller_scroll_new(GTK_EVENT_CONTROLLER_SCROLL_VERTICAL);
+    gtk_event_controller_set_propagation_phase(zoom_scroll, GTK_PHASE_CAPTURE);
+    g_signal_connect(zoom_scroll, "scroll", G_CALLBACK(on_grid_scroll_zoom), state);
+    gtk_widget_add_controller(grid_overlay, zoom_scroll);
+    GtkGesture *drag = gtk_gesture_drag_new();
+    gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(drag), GDK_BUTTON_PRIMARY);
+    g_signal_connect(drag, "drag-begin", G_CALLBACK(on_drag_begin), state);
+    g_signal_connect(drag, "drag-update", G_CALLBACK(on_drag_update), state);
+    g_signal_connect(drag, "drag-end", G_CALLBACK(on_drag_end), state);
+    gtk_widget_add_controller(grid_overlay, GTK_EVENT_CONTROLLER(drag));
+    GtkGesture *bg_rclick = gtk_gesture_click_new();
+    gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(bg_rclick), GDK_BUTTON_SECONDARY);
+    g_signal_connect(bg_rclick, "pressed", G_CALLBACK(on_grid_bg_right_clicked), state);
+    gtk_widget_add_controller(grid_overlay, GTK_EVENT_CONTROLLER(bg_rclick));
+    GType bg_drop_types[] = {GDK_TYPE_FILE_LIST, G_TYPE_FILE};
+    GtkDropTarget *bg_drop_tgt = gtk_drop_target_new(G_TYPE_INVALID, GDK_ACTION_MOVE | GDK_ACTION_COPY);
+    gtk_drop_target_set_gtypes(bg_drop_tgt, bg_drop_types, G_N_ELEMENTS(bg_drop_types));
+    g_signal_connect(bg_drop_tgt, "drop", G_CALLBACK(on_grid_bg_drop), state);
+    gtk_widget_add_controller(grid_overlay, GTK_EVENT_CONTROLLER(bg_drop_tgt));
+    return grid_overlay;
 }
 /* --- Main Application Window Assembly --- */
 void activate_app_with_path(GtkApplication *app, const char *initial_path)
@@ -861,25 +922,22 @@ void activate_app_with_path(GtkApplication *app, const char *initial_path)
     GtkWidget *window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Blurred Files");
     gtk_window_set_icon_name(GTK_WINDOW(window), "blurred_files");
-    gtk_window_set_default_size(GTK_WINDOW(window), 1200, 720);
+    gtk_window_set_default_size(GTK_WINDOW(window), 1280, 720);
     gtk_widget_set_size_request(window, 820, 480);
     gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
     g_object_set_data(G_OBJECT(window), "app-state", state);
     state->window = window;
-    /* Mouse side-button navigation (Back / Forward) */
     GtkGesture *mouse_nav = gtk_gesture_click_new();
     gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(mouse_nav), 0);
     gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(mouse_nav), GTK_PHASE_CAPTURE);
     g_signal_connect(mouse_nav, "pressed", G_CALLBACK(on_window_mouse_nav_pressed), state);
     gtk_widget_add_controller(window, GTK_EVENT_CONTROLLER(mouse_nav));
-    /* Capture-phase keyboard shortcuts */
     GtkEventController *key_ctrl = gtk_event_controller_key_new();
     gtk_event_controller_set_propagation_phase(key_ctrl, GTK_PHASE_CAPTURE);
     g_signal_connect(key_ctrl, "key-pressed", G_CALLBACK(on_window_key_pressed), state);
     gtk_widget_add_controller(window, key_ctrl);
     GtkWidget *overlay = gtk_overlay_new();
     gtk_window_set_child(GTK_WINDOW(window), overlay);
-    /* 8-way window edge resize controllers attached directly to overlay */
     GtkEventController *motion_ctrl = gtk_event_controller_motion_new();
     gtk_event_controller_set_propagation_phase(motion_ctrl, GTK_PHASE_CAPTURE);
     g_signal_connect(motion_ctrl, "motion", G_CALLBACK(on_window_pointer_motion), overlay);
@@ -895,9 +953,7 @@ void activate_app_with_path(GtkApplication *app, const char *initial_path)
     gtk_overlay_set_child(GTK_OVERLAY(overlay), bg_canvas);
     GtkWidget *main_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_add_css_class(main_hbox, "window-inner");
-    /* Left Sidebar */
     gtk_box_append(GTK_BOX(main_hbox), build_sidebar_widget(state));
-    /* Right Content Pane */
     GtkWidget *content_pane = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     gtk_widget_add_css_class(content_pane, "content-controls");
     gtk_widget_set_hexpand(content_pane, TRUE);
@@ -906,7 +962,7 @@ void activate_app_with_path(GtkApplication *app, const char *initial_path)
     gtk_widget_add_css_class(header_box, "squircle-header-content");
     gtk_window_handle_set_child(GTK_WINDOW_HANDLE(window_handle), header_box);
     g_signal_connect(bg_canvas, "resize", G_CALLBACK(on_bg_canvas_resized), header_box);
-    /* 1. Left & Right Arrow Buttons Together (No Gap) */
+    /* 1. Back & Forward Buttons */
     GtkWidget *back_btn = gtk_button_new_from_icon_name("go-previous-symbolic");
     GtkWidget *fwd_btn = gtk_button_new_from_icon_name("go-next-symbolic");
     gtk_widget_remove_css_class(back_btn, "circular");
@@ -924,7 +980,7 @@ void activate_app_with_path(GtkApplication *app, const char *initial_path)
     gtk_widget_set_valign(nav_group, GTK_ALIGN_CENTER);
     gtk_box_append(GTK_BOX(nav_group), back_btn);
     gtk_box_append(GTK_BOX(nav_group), fwd_btn);
-    /* 2. Root "/" + "|" + Tight Breadcrumbs with True Alpha Edge Fade */
+    /* 2. Root "/" + Breadcrumbs */
     GtkWidget *root_btn = gtk_button_new_with_label("/");
     gtk_widget_add_css_class(root_btn, "breadcrumb-pill");
     gtk_widget_set_size_request(root_btn, -1, 30);
@@ -972,7 +1028,7 @@ void activate_app_with_path(GtkApplication *app, const char *initial_path)
     gtk_box_append(GTK_BOX(crumb_section), root_btn);
     gtk_box_append(GTK_BOX(crumb_section), pipe_lbl);
     gtk_box_append(GTK_BOX(crumb_section), crumb_fade_wrap);
-    /* 3. Icon & List View Buttons Together (No Gap) */
+    /* 3. Grid / List View Buttons */
     GtkWidget *grid_btn = gtk_button_new_from_icon_name("view-grid-symbolic");
     GtkWidget *list_btn = gtk_button_new_from_icon_name("view-list-symbolic");
     gtk_widget_remove_css_class(grid_btn, "circular");
@@ -991,7 +1047,7 @@ void activate_app_with_path(GtkApplication *app, const char *initial_path)
     gtk_widget_set_valign(view_group, GTK_ALIGN_CENTER);
     gtk_box_append(GTK_BOX(view_group), grid_btn);
     gtk_box_append(GTK_BOX(view_group), list_btn);
-    /* 4. Search Bar & Settings Gear Button (Little Spacing) */
+    /* 4. Search Bar & Settings */
     GtkWidget *search_entry = gtk_search_entry_new();
     gtk_widget_add_css_class(search_entry, "header-search");
     gtk_widget_set_size_request(search_entry, 150, 30);
@@ -1006,7 +1062,7 @@ void activate_app_with_path(GtkApplication *app, const char *initial_path)
     gtk_widget_set_valign(settings_btn, GTK_ALIGN_CENTER);
     gtk_widget_set_margin_start(settings_btn, 8);
     g_signal_connect(settings_btn, "clicked", G_CALLBACK(on_header_settings_clicked), state);
-    /* 5. System Window Buttons Close Together (4px gap) */
+    /* 5. Window Controls */
     GtkWidget *min_btn = gtk_button_new_from_icon_name("window-minimize-symbolic");
     GtkWidget *max_btn = gtk_button_new_from_icon_name("window-maximize-symbolic");
     GtkWidget *close_btn = gtk_button_new_from_icon_name("window-close-symbolic");
@@ -1025,7 +1081,6 @@ void activate_app_with_path(GtkApplication *app, const char *initial_path)
     gtk_box_append(GTK_BOX(win_ctrl_group), min_btn);
     gtk_box_append(GTK_BOX(win_ctrl_group), max_btn);
     gtk_box_append(GTK_BOX(win_ctrl_group), close_btn);
-    /* Assemble Header Bar */
     gtk_box_append(GTK_BOX(header_box), nav_group);
     gtk_box_append(GTK_BOX(header_box), crumb_section);
     gtk_box_append(GTK_BOX(header_box), view_group);
@@ -1033,7 +1088,7 @@ void activate_app_with_path(GtkApplication *app, const char *initial_path)
     gtk_box_append(GTK_BOX(header_box), settings_btn);
     gtk_box_append(GTK_BOX(header_box), win_ctrl_group);
     gtk_box_append(GTK_BOX(content_pane), window_handle);
-    /* Clickable List View Column Header Bar */
+    /* List View Column Headers */
     GtkWidget *list_header_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 14);
     gtk_widget_add_css_class(list_header_bar, "list-column-headers");
     gtk_widget_set_visible(list_header_bar, state->is_list_view);
@@ -1071,62 +1126,9 @@ void activate_app_with_path(GtkApplication *app, const char *initial_path)
     gtk_box_append(GTK_BOX(list_header_bar), col_date);
     gtk_box_append(GTK_BOX(list_header_bar), col_size);
     gtk_box_append(GTK_BOX(content_pane), list_header_bar);
-    /* Overlay around ScrolledWindow to draw Rubberband Rectangle Selection Marquee */
-    GtkWidget *grid_overlay = gtk_overlay_new();
-    gtk_widget_set_vexpand(grid_overlay, TRUE);
-    state->grid_overlay = grid_overlay;
-    GtkWidget *scrolled = gtk_scrolled_window_new();
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled), GTK_POLICY_EXTERNAL, GTK_POLICY_AUTOMATIC);
-    gtk_scrolled_window_set_propagate_natural_width(GTK_SCROLLED_WINDOW(scrolled), FALSE);
-    gtk_widget_set_vexpand(scrolled, TRUE);
-    state->scrolled = scrolled;
-    GtkWidget *flowbox = gtk_flow_box_new();
-    gtk_widget_set_halign(flowbox, GTK_ALIGN_FILL);
-    gtk_widget_set_valign(flowbox, GTK_ALIGN_START);
-    gtk_widget_add_css_class(flowbox, "files-grid");
-    gtk_flow_box_set_homogeneous(GTK_FLOW_BOX(flowbox), TRUE);
-    gtk_flow_box_set_min_children_per_line(GTK_FLOW_BOX(flowbox), 1);
-    gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(flowbox), 20);
-    gtk_flow_box_set_row_spacing(GTK_FLOW_BOX(flowbox), 12);
-    gtk_flow_box_set_column_spacing(GTK_FLOW_BOX(flowbox), 12);
-    gtk_flow_box_set_selection_mode(GTK_FLOW_BOX(flowbox), GTK_SELECTION_NONE);
-    state->flowbox = flowbox;
-    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled), flowbox);
-    gtk_overlay_set_child(GTK_OVERLAY(grid_overlay), scrolled);
-    /* Selection Marquee Box */
-    GtkWidget *selection_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_widget_add_css_class(selection_box, "selection-marquee");
-    gtk_widget_set_halign(selection_box, GTK_ALIGN_START);
-    gtk_widget_set_valign(selection_box, GTK_ALIGN_START);
-    gtk_widget_set_can_target(selection_box, FALSE);
-    gtk_widget_set_visible(selection_box, FALSE);
-    state->selection_box = selection_box;
-    gtk_overlay_add_overlay(GTK_OVERLAY(grid_overlay), selection_box);
-    /* Ctrl + Mouse Wheel 5-tier icon zoom */
-    GtkEventController *zoom_scroll = gtk_event_controller_scroll_new(GTK_EVENT_CONTROLLER_SCROLL_VERTICAL);
-    gtk_event_controller_set_propagation_phase(zoom_scroll, GTK_PHASE_CAPTURE);
-    g_signal_connect(zoom_scroll, "scroll", G_CALLBACK(on_grid_scroll_zoom), state);
-    gtk_widget_add_controller(grid_overlay, zoom_scroll);
-    /* Left-drag gesture for whitespace-only rubberband selection */
-    GtkGesture *drag = gtk_gesture_drag_new();
-    gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(drag), GDK_BUTTON_PRIMARY);
-    g_signal_connect(drag, "drag-begin", G_CALLBACK(on_drag_begin), state);
-    g_signal_connect(drag, "drag-update", G_CALLBACK(on_drag_update), state);
-    g_signal_connect(drag, "drag-end", G_CALLBACK(on_drag_end), state);
-    gtk_widget_add_controller(grid_overlay, GTK_EVENT_CONTROLLER(drag));
-    /* Right-click gesture on empty space */
-    GtkGesture *bg_rclick = gtk_gesture_click_new();
-    gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(bg_rclick), GDK_BUTTON_SECONDARY);
-    g_signal_connect(bg_rclick, "pressed", G_CALLBACK(on_grid_bg_right_clicked), state);
-    gtk_widget_add_controller(grid_overlay, GTK_EVENT_CONTROLLER(bg_rclick));
-    /* Cross-window drop target onto the directory background */
-    GType bg_drop_types[] = {GDK_TYPE_FILE_LIST, G_TYPE_FILE};
-    GtkDropTarget *bg_drop_tgt = gtk_drop_target_new(G_TYPE_INVALID, GDK_ACTION_MOVE | GDK_ACTION_COPY);
-    gtk_drop_target_set_gtypes(bg_drop_tgt, bg_drop_types, G_N_ELEMENTS(bg_drop_types));
-    g_signal_connect(bg_drop_tgt, "drop", G_CALLBACK(on_grid_bg_drop), state);
-    gtk_widget_add_controller(grid_overlay, GTK_EVENT_CONTROLLER(bg_drop_tgt));
-    gtk_box_append(GTK_BOX(content_pane), grid_overlay);
-    /* Bottom Status Bar (Centered & Shifted 5px Down) */
+    /* Shared File Grid & Marquee Overlay */
+    gtk_box_append(GTK_BOX(content_pane), build_file_grid_overlay(state));
+    /* Bottom Status Bar */
     GtkWidget *status_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
     gtk_widget_add_css_class(status_bar, "bottom-status-bar");
     gtk_widget_set_halign(status_bar, GTK_ALIGN_CENTER);

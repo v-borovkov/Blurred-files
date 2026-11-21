@@ -13,6 +13,7 @@ BuildRequires:  gcc
 BuildRequires:  make
 BuildRequires:  pkgconfig
 BuildRequires:  pkgconfig(gtk4)
+BuildRequires:  pkgconfig(gtk4-layer-shell-0)
 Requires:       zip
 Requires:       unzip
 Requires:       tar
@@ -21,7 +22,7 @@ Requires:       xdg-utils
 %description
 A fast, lightweight GTK4 file manager written in C from scratch, featuring a
 custom superellipse window silhouette, translucent Wayfire-blurred sidebar,
-and tactile Neumorphic header controls.
+tactile Neumorphic header controls, and a Wayland wlr-layer-shell desktop mode.
 
 %prep
 %autosetup
@@ -53,4 +54,4 @@ rm -f %{buildroot}%{_datadir}/applications/intent.cache
 
 %changelog
 * Sat Nov 21 2026 v-borovkov <v-borovkov@://github.com> - 0.7.0-1
-- Initial public beta RPM package
+- Add Wayfire layer-shell --desktop mode and GPU thumbnail cover widget

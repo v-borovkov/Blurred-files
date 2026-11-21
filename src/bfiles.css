@@ -701,3 +701,40 @@ button.sidebar-btn.active {
     outline-color: transparent;
 }
 
+/* --- Wayland Layer-Shell Desktop Mode --- */
+window.desktop-mode-window,
+.desktop-grid-overlay,
+.desktop-files-grid {
+    background: transparent;
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.desktop-files-grid {
+    padding: 28px;
+}
+
+.desktop-file-label {
+    color: #ffffff;
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.65);
+}
+
+button.file-card-btn.desktop-file-card {
+    background: transparent;
+    border: 1px solid transparent;
+    box-shadow: none;
+    border-radius: 14px;
+    padding: 8px 6px;
+}
+
+button.file-card-btn.desktop-file-card:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.24);
+}
+
+button.file-card-btn.desktop-file-card.selected {
+    background: rgba(90, 165, 255, 0.32);
+    border-color: rgba(130, 195, 255, 0.65);
+}
+

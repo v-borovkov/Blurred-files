@@ -92,6 +92,7 @@ typedef struct
     GList *redo_stack;
 
     /* View, Sort & Settings state */
+    gboolean is_desktop_mode;
     gboolean is_list_view;
     gboolean show_hidden;
     gboolean enable_thumbnails;
@@ -161,7 +162,16 @@ gboolean is_folder_pinned(AppState *state, const char *path);
 void toggle_pin_folder(AppState *state, const char *path);
 
 /* ui_main.c */
+GtkWidget *build_file_grid_overlay(AppState *state);
+gboolean on_window_key_pressed(GtkEventControllerKey *controller,
+                               guint keyval,
+                               guint keycode,
+                               GdkModifierType modifiers,
+                               gpointer user_data);
 void activate_app(GtkApplication *app, gpointer user_data);
 void activate_app_with_path(GtkApplication *app, const char *initial_path);
+
+/* ui_desktop.c */
+void activate_desktop_mode(GtkApplication *app, gpointer user_data);
 
 #endif /* APP_H */

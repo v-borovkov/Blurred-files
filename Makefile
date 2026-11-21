@@ -5,8 +5,9 @@ DATADIR  = $(PREFIX)/share/blurred_files
 APPDIR   = $(PREFIX)/share/applications
 ICONDIR  = $(PREFIX)/share/icons/hicolor/scalable/apps
 
-CFLAGS   = -Wall -O2 -DDATADIR=\"$(DATADIR)\" $(shell pkg-config --cflags gtk4)
-LDFLAGS  = $(shell pkg-config --libs gtk4) -lm
+PKGS     = gtk4 gtk4-layer-shell-0
+CFLAGS   = -Wall -O2 -DDATADIR=\"$(DATADIR)\" $(shell pkg-config --cflags $(PKGS))
+LDFLAGS  = $(shell pkg-config --libs $(PKGS)) -lm
 STRIP   ?= strip
 
 SRC_DIR  = src
@@ -31,7 +32,7 @@ $(TARGET): $(OBJS)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(SRC_DIR)/app.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-sanitize: CFLAGS = -Wall -O1 -g -DDATADIR=\"$(DATADIR)\" $(shell pkg-config --cflags gtk4) $(ASAN_FLAGS)
+sanitize: CFLAGS = -Wall -O1 -g -DDATADIR=\"$(DATADIR)\" $(shell pkg-config --cflags $(PKGS)) $(ASAN_FLAGS)
 sanitize: LDFLAGS += $(ASAN_FLAGS)
 sanitize: STRIP = true
 sanitize: clean $(TARGET) $(BUILD_DIR)/test_runner

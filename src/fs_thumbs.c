@@ -1,12 +1,87 @@
 #include "app.h"
 
-typedef struct {
+/* --- Zero-Intrinsic-Size GPU Cover-Fit Thumbnail Widget --- */
+typedef struct
+{
+    GtkWidget parent_instance;
+    GdkTexture *texture;
+} ThumbCoverWidget;
+
+typedef struct
+{
+    GtkWidgetClass parent_class;
+} ThumbCoverWidgetClass;
+
+G_DEFINE_TYPE(ThumbCoverWidget, thumb_cover_widget, GTK_TYPE_WIDGET)
+
+static void thumb_cover_widget_snapshot(GtkWidget *widget, GtkSnapshot *snapshot)
+{
+    ThumbCoverWidget *self = (ThumbCoverWidget *)widget;
+    if (!self->texture)
+        return;
+
+    int w = gtk_widget_get_width(widget);
+    int h = gtk_widget_get_height(widget);
+    int tex_w = gdk_texture_get_width(self->texture);
+    int tex_h = gdk_texture_get_height(self->texture);
+    if (w <= 0 || h <= 0 || tex_w <= 0 || tex_h <= 0)
+        return;
+
+    float scale = MAX((float)w / (float)tex_w, (float)h / (float)tex_h);
+    float draw_w = (float)tex_w * scale;
+    float draw_h = (float)tex_h * scale;
+    float off_x = ((float)w - draw_w) * 0.5f;
+    float off_y = ((float)h - draw_h) * 0.5f;
+
+    GskRoundedRect clip;
+    gsk_rounded_rect_init_from_rect(&clip,
+                                    &GRAPHENE_RECT_INIT(0.0f, 0.0f, (float)w, (float)h),
+                                    8.0f);
+    gtk_snapshot_push_rounded_clip(snapshot, &clip);
+    gtk_snapshot_append_texture(snapshot,
+                                self->texture,
+                                &GRAPHENE_RECT_INIT(off_x, off_y, draw_w, draw_h));
+    gtk_snapshot_pop(snapshot);
+}
+
+static void thumb_cover_widget_dispose(GObject *object)
+{
+    ThumbCoverWidget *self = (ThumbCoverWidget *)object;
+    g_clear_object(&self->texture);
+    G_OBJECT_CLASS(thumb_cover_widget_parent_class)->dispose(object);
+}
+
+static void thumb_cover_widget_class_init(ThumbCoverWidgetClass *klass)
+{
+    G_OBJECT_CLASS(klass)->dispose = thumb_cover_widget_dispose;
+    GTK_WIDGET_CLASS(klass)->snapshot = thumb_cover_widget_snapshot;
+}
+
+static void thumb_cover_widget_init(ThumbCoverWidget *self)
+{
+    self->texture = NULL;
+}
+
+static GtkWidget *thumb_cover_widget_new(GdkTexture *texture)
+{
+    ThumbCoverWidget *self = g_object_new(thumb_cover_widget_get_type(), NULL);
+    self->texture = g_object_ref(texture);
+    gtk_widget_set_hexpand(GTK_WIDGET(self), TRUE);
+    gtk_widget_set_vexpand(GTK_WIDGET(self), TRUE);
+    gtk_widget_add_css_class(GTK_WIDGET(self), "image-preview-thumb");
+    return GTK_WIDGET(self);
+}
+
+/* --- Async Pixbuf -> GdkTexture Loader --- */
+typedef struct
+{
     char *file_path;
     int target_w;
     int target_h;
 } ThumbJobData;
 
-static void free_thumb_job_data(gpointer data) {
+static void free_thumb_job_data(gpointer data)
+{
     ThumbJobData *job = (ThumbJobData *)data;
     g_free(job->file_path);
     g_free(job);
@@ -15,8 +90,11 @@ static void free_thumb_job_data(gpointer data) {
 static void load_thumbnail_worker(GTask *task,
                                   gpointer source_object,
                                   gpointer task_data,
-                                  GCancellable *cancellable) {
-    if (g_cancellable_is_cancelled(cancellable)) {
+                                  GCancellable *cancellable)
+{
+    (void)source_object;
+    if (g_cancellable_is_cancelled(cancellable))
+    {
         g_task_return_new_error(task, G_IO_ERROR, G_IO_ERROR_CANCELLED, "Cancelled");
         return;
     }
@@ -25,23 +103,24 @@ static void load_thumbnail_worker(GTask *task,
     GError *err = NULL;
 
     GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file_at_scale(
-        job->file_path, job->target_w, job->target_h, TRUE, &err
-    );
+        job->file_path, job->target_w, job->target_h, TRUE, &err);
 
-    if (!pixbuf) {
+    if (!pixbuf)
+    {
         g_task_return_error(task, err);
         return;
     }
 
-    if (g_cancellable_is_cancelled(cancellable)) {
+    if (g_cancellable_is_cancelled(cancellable))
+    {
         g_object_unref(pixbuf);
         g_task_return_new_error(task, G_IO_ERROR, G_IO_ERROR_CANCELLED, "Cancelled");
         return;
     }
 
     GdkPixbuf *rgba = gdk_pixbuf_get_has_alpha(pixbuf)
-        ? g_object_ref(pixbuf)
-        : gdk_pixbuf_add_alpha(pixbuf, FALSE, 0, 0, 0);
+                          ? g_object_ref(pixbuf)
+                          : gdk_pixbuf_add_alpha(pixbuf, FALSE, 0, 0, 0);
     g_object_unref(pixbuf);
 
     int w = gdk_pixbuf_get_width(rgba);
@@ -58,31 +137,29 @@ static void load_thumbnail_worker(GTask *task,
     g_task_return_pointer(task, texture, g_object_unref);
 }
 
-static void on_thumbnail_ready(GObject *source_object, GAsyncResult *res, gpointer user_data) {
+static void on_thumbnail_ready(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+    (void)user_data;
     GtkWidget *visual_slot = GTK_WIDGET(source_object);
     GError *err = NULL;
     GdkTexture *texture = g_task_propagate_pointer(G_TASK(res), &err);
 
-    if (texture != NULL) {
-        if (gtk_widget_get_root(visual_slot) != NULL) {
-            int req_w = gtk_widget_get_width(visual_slot);
-            int req_h = gtk_widget_get_height(visual_slot);
-            if (req_w <= 0) req_w = 76;
-            if (req_h <= 0) req_h = 56;
-
-            GtkWidget *picture = gtk_picture_new_for_paintable(GDK_PAINTABLE(texture));
-            gtk_picture_set_content_fit(GTK_PICTURE(picture), GTK_CONTENT_FIT_COVER);
-            gtk_widget_set_size_request(picture, req_w, req_h);
-            gtk_widget_add_css_class(picture, "image-preview-thumb");
-
+    if (texture != NULL)
+    {
+        if (GTK_IS_BOX(visual_slot) && gtk_widget_get_root(visual_slot) != NULL)
+        {
+            GtkWidget *thumb = thumb_cover_widget_new(texture);
             GtkWidget *first = gtk_widget_get_first_child(visual_slot);
-            if (first) {
+            if (first)
+            {
                 gtk_box_remove(GTK_BOX(visual_slot), first);
             }
-            gtk_box_append(GTK_BOX(visual_slot), picture);
+            gtk_box_append(GTK_BOX(visual_slot), thumb);
         }
         g_object_unref(texture);
-    } else if (err) {
+    }
+    else if (err)
+    {
         g_error_free(err);
     }
 
@@ -93,7 +170,8 @@ void queue_async_thumbnail(AppState *state,
                            GtkWidget *visual_slot,
                            const char *full_path,
                            int w,
-                           int h) {
+                           int h)
+{
     ThumbJobData *job = g_new0(ThumbJobData, 1);
     job->file_path = g_strdup(full_path);
     job->target_w = w;
