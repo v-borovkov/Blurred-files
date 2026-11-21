@@ -1,3 +1,5 @@
+%global debug_package %{nil}
+
 Name:           blurred-files
 Version:        0.7.0
 Release:        1%{?dist}
@@ -29,6 +31,8 @@ make PREFIX=%{_prefix} %{?_smp_mflags}
 
 %install
 make install PREFIX=%{_prefix} DESTDIR=%{buildroot}
+rm -f %{buildroot}%{_datadir}/applications/mimeinfo.cache
+rm -f %{buildroot}%{_datadir}/applications/intent.cache
 
 %post
 /usr/bin/gtk-update-icon-cache -f -t %{_datadir}/icons/hicolor &> /dev/null || :
@@ -48,5 +52,5 @@ make install PREFIX=%{_prefix} DESTDIR=%{buildroot}
 %{_datadir}/applications/blurred_files.desktop
 
 %changelog
-* Sat Nov 21 2026 v-borovkov <v-borovkov@://github.com> - 1.0.0-1
+* Sat Nov 21 2026 v-borovkov <v-borovkov@://github.com> - 0.7.0-1
 - Initial public beta RPM package
