@@ -668,6 +668,17 @@ entry.modal-text-entry:focus-within {
         inset 1px 1px 3px rgba(0, 0, 0, 0.35);
 }
 
+entry.modal-text-entry text selection,
+entry.header-search text selection {
+    background-color: rgba(255, 107, 0, 0.58);
+    color: #ffffff;
+}
+
+entry.modal-text-entry text {
+    color: #f3f5f8;
+    caret-color: #ffb857;
+}
+
 /* Primary Orange Action Button */
 button.modal-primary-btn {
     color: #ffffff;

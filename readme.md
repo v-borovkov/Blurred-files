@@ -5,6 +5,7 @@ A fast, lightweight GTK4 file manager written in C from scratch, featuring a cus
 > **Note:** Blurred Files is currently in **beta**. While core file operations and automated tests are in place, please report any compositor-specific quirks or edge cases via GitHub Issues.
 
 ![Blurred Files Preview](screenshots/preview.png)
+![Blurred Files Preview](screenshots/preview2.png)
 
 ---
 
