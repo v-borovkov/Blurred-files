@@ -100,6 +100,9 @@ typedef struct
     int grid_cols;
     SortColumn sort_column;
     gboolean sort_ascending;
+    int col_type_w;
+    int col_date_w;
+    int col_size_w;
 
     /* Rubberband selection state */
     gboolean is_selecting;
@@ -163,6 +166,7 @@ void toggle_pin_folder(AppState *state, const char *path);
 
 /* ui_main.c */
 GtkWidget *build_file_grid_overlay(AppState *state);
+GtkWidget *build_list_column_headers(AppState *state);
 gboolean on_window_key_pressed(GtkEventControllerKey *controller,
                                guint keyval,
                                guint keycode,

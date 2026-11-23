@@ -140,7 +140,7 @@ void on_draw_squircle_bg(GtkDrawingArea *area, cairo_t *cr, int width, int heigh
     cairo_squircle_path(cr, x + 1.2, y + 1.2, w - 2.4, h - 2.4, rx_outer, ry_outer, n_outer);
     cairo_clip(cr);
 
-    /* 1. Translucent Slate-Charcoal Sidebar with Subtle 3D Gradient (Wayfire blur shines through) */
+    /* 1. Translucent Slate-Charcoal Sidebar (Wayfire blur shines through) */
     cairo_pattern_t *sb_grad = cairo_pattern_create_linear(x, y, x + sidebar_visible_w, y + h);
     cairo_pattern_add_color_stop_rgba(sb_grad, 0.00, 44.0 / 255.0, 50.0 / 255.0, 64.0 / 255.0, 0.48);
     cairo_pattern_add_color_stop_rgba(sb_grad, 0.50, 28.0 / 255.0, 32.0 / 255.0, 42.0 / 255.0, 0.45);
@@ -159,60 +159,65 @@ void on_draw_squircle_bg(GtkDrawingArea *area, cairo_t *cr, int width, int heigh
         cairo_restore(cr);
     }
 
-    /* 3. Deeper 3D Ambient + Contact Shadow Cast by the White Content Card onto the Sidebar */
+    /* 3. Deeper 3D Ambient + Contact Shadow Cast by the Content Card onto the Sidebar */
     for (int i = 16; i >= 1; i--) {
         cairo_save(cr);
         cairo_squircle_path(cr, card_x - i * 1.15, y, card_w, h, rx_card, ry_card, n_card);
-        double alpha = 0.010 + (16.0 - i) * 0.0024;
+        double alpha = 0.012 + (16.0 - i) * 0.0028;
         cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, alpha);
         cairo_fill(cr);
         cairo_restore(cr);
     }
 
-    /* 4. Crisp Rim Highlight along the Left Curved Edge of the White Content Card */
+    /* 4. Subtle Rim Highlight along the Left Curved Edge of the Content Card */
     cairo_save(cr);
     cairo_squircle_path(cr, card_x - 0.5, y, card_w, h, rx_card, ry_card, n_card);
-    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.55);
+    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.22);
     cairo_set_line_width(cr, 1.2);
     cairo_stroke(cr);
     cairo_restore(cr);
 
-    /* Clip & Fill Solid White Content Card */
+    /* Clip & Fill Deep Charcoal Content Card (Darker than the Header Bar) */
     cairo_save(cr);
     cairo_squircle_path(cr, card_x, y, card_w, h, rx_card, ry_card, n_card);
     cairo_clip_preserve(cr);
-    cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-    cairo_fill(cr);
 
-    /* Concave-Bottom 3D Bright Cold Ice-Blue Header inside Top of Content Card */
+    cairo_pattern_t *card_grad = cairo_pattern_create_linear(card_x, y, card_x, y + h);
+    cairo_pattern_add_color_stop_rgb(card_grad, 0.0, 35.0 / 255.0, 40.0 / 255.0, 52.0 / 255.0);
+    cairo_pattern_add_color_stop_rgb(card_grad, 1.0, 26.0 / 255.0, 30.0 / 255.0, 40.0 / 255.0);
+    cairo_set_source(cr, card_grad);
+    cairo_fill(cr);
+    cairo_pattern_destroy(card_grad);
+
+    /* Concave-Bottom 3D Opaque Dark Slate-Grey Header inside Top of Content Card */
     double hdr_center_h = 74.0;
     double hdr_ear_dip  = 24.0;
 
-    /* Soft Cool Ambient + Contact Drop Shadow cast onto the White Card */
-    for (int i = 14; i >= 1; i--) {
+    /* Deep 3D Ambient + Contact Drop Shadow cast onto the Dark Content Card */
+    for (int i = 16; i >= 1; i--) {
         cairo_save(cr);
-        cairo_concave_header_path(cr, card_x, y + i * 1.15, card_w, hdr_center_h, hdr_ear_dip);
-        double alpha = 0.008 + (14.0 - i) * 0.0018;
-        cairo_set_source_rgba(cr, 95.0 / 255.0, 120.0 / 255.0, 155.0 / 255.0, alpha);
+        cairo_concave_header_path(cr, card_x, y + i * 1.25, card_w, hdr_center_h, hdr_ear_dip);
+        double alpha = 0.016 + (16.0 - i) * 0.0034;
+        cairo_set_source_rgba(cr, 8.0 / 255.0, 10.0 / 255.0, 16.0 / 255.0, alpha);
         cairo_fill(cr);
         cairo_restore(cr);
     }
 
-    /* 3D Top-Lit Bright Cold Ice-Blue Gradient Fill */
-    cairo_pattern_t *cold_grad = cairo_pattern_create_linear(card_x, y, card_x, y + hdr_center_h + hdr_ear_dip);
-    cairo_pattern_add_color_stop_rgba(cold_grad, 0.00, 244.0 / 255.0, 248.0 / 255.0, 254.0 / 255.0, 0.98);
-    cairo_pattern_add_color_stop_rgba(cold_grad, 0.45, 229.0 / 255.0, 238.0 / 255.0, 249.0 / 255.0, 0.97);
-    cairo_pattern_add_color_stop_rgba(cold_grad, 0.90, 212.0 / 255.0, 225.0 / 255.0, 242.0 / 255.0, 0.98);
-    cairo_pattern_add_color_stop_rgba(cold_grad, 1.00, 198.0 / 255.0, 214.0 / 255.0, 235.0 / 255.0, 0.99);
+    /* 100% Opaque Brighter Slate-Grey Neomorphic Header Gradient Fill */
+    cairo_pattern_t *dark_hdr_grad = cairo_pattern_create_linear(card_x, y, card_x, y + hdr_center_h + hdr_ear_dip);
+    cairo_pattern_add_color_stop_rgb(dark_hdr_grad, 0.00, 86.0 / 255.0, 94.0 / 255.0, 112.0 / 255.0);
+    cairo_pattern_add_color_stop_rgb(dark_hdr_grad, 0.45, 70.0 / 255.0, 77.0 / 255.0, 93.0 / 255.0);
+    cairo_pattern_add_color_stop_rgb(dark_hdr_grad, 0.90, 56.0 / 255.0, 62.0 / 255.0, 76.0 / 255.0);
+    cairo_pattern_add_color_stop_rgb(dark_hdr_grad, 1.00, 48.0 / 255.0, 53.0 / 255.0, 66.0 / 255.0);
 
     cairo_concave_header_path(cr, card_x, y, card_w, hdr_center_h, hdr_ear_dip);
-    cairo_set_source(cr, cold_grad);
+    cairo_set_source(cr, dark_hdr_grad);
     cairo_fill_preserve(cr);
-    cairo_pattern_destroy(cold_grad);
+    cairo_pattern_destroy(dark_hdr_grad);
 
-    /* Cool Steel-Blue Lower Edge Bevel Stroke */
-    cairo_set_source_rgba(cr, 150.0 / 255.0, 172.0 / 255.0, 202.0 / 255.0, 0.65);
-    cairo_set_line_width(cr, 1.2);
+    /* Crisp Cool-Grey Lower Edge Bevel Stroke */
+    cairo_set_source_rgba(cr, 165.0 / 255.0, 178.0 / 255.0, 204.0 / 255.0, 0.45);
+    cairo_set_line_width(cr, 1.3);
     cairo_stroke(cr);
 
     /* Inner Top Specular White Highlight Rim */
@@ -221,7 +226,7 @@ void on_draw_squircle_bg(GtkDrawingArea *area, cairo_t *cr, int width, int heigh
     cairo_clip(cr);
 
     cairo_squircle_path(cr, card_x + 1.0, y + 1.2, card_w - 2.0, h - 2.0, rx_card, ry_card, n_card);
-    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.85);
+    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.34);
     cairo_set_line_width(cr, 1.6);
     cairo_stroke(cr);
     cairo_restore(cr);

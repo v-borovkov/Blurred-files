@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           blurred-files
-Version:        %{?_version}%{!?_version:0.7.1}
+Version:        %{?_version}%{!?_version:0.7.3}
 Release:        1%{?dist}
 Summary:        Fast, lightweight GTK4 file manager with superellipse UI
 
@@ -53,5 +53,8 @@ rm -f %{buildroot}%{_datadir}/applications/intent.cache
 %{_datadir}/applications/blurred_files.desktop
 
 %changelog
+* Mon Nov 23 2026 v-borovkov <v-borovkov@://github.com> - 0.7.3-1
+- Unified dark slate-grey UI, dark modals, resizable List View columns, and single-click drag-and-drop fix
+
 * Sat Nov 21 2026 v-borovkov <v-borovkov@://github.com> - 0.7.0-1
 - Add Wayfire layer-shell --desktop mode and GPU thumbnail cover widget

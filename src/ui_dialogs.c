@@ -28,6 +28,9 @@ void save_app_settings(AppState *state)
     g_key_file_set_integer(kf, "General", "grid_cols", state->grid_cols);
     g_key_file_set_integer(kf, "General", "sort_column", (int)state->sort_column);
     g_key_file_set_boolean(kf, "General", "sort_ascending", state->sort_ascending);
+    g_key_file_set_integer(kf, "General", "col_type_w", state->col_type_w > 0 ? state->col_type_w : 130);
+    g_key_file_set_integer(kf, "General", "col_date_w", state->col_date_w > 0 ? state->col_date_w : 145);
+    g_key_file_set_integer(kf, "General", "col_size_w", state->col_size_w > 0 ? state->col_size_w : 75);
 
     guint count = g_list_length(state->pinned_folders);
     if (count > 0)
@@ -87,6 +90,18 @@ void load_app_settings(AppState *state)
         if (g_key_file_has_key(kf, "General", "sort_ascending", NULL))
         {
             state->sort_ascending = g_key_file_get_boolean(kf, "General", "sort_ascending", NULL);
+        }
+        if (g_key_file_has_key(kf, "General", "col_type_w", NULL))
+        {
+            state->col_type_w = CLAMP(g_key_file_get_integer(kf, "General", "col_type_w", NULL), 60, 420);
+        }
+        if (g_key_file_has_key(kf, "General", "col_date_w", NULL))
+        {
+            state->col_date_w = CLAMP(g_key_file_get_integer(kf, "General", "col_date_w", NULL), 80, 360);
+        }
+        if (g_key_file_has_key(kf, "General", "col_size_w", NULL))
+        {
+            state->col_size_w = CLAMP(g_key_file_get_integer(kf, "General", "col_size_w", NULL), 50, 260);
         }
 
         gsize len = 0;
@@ -208,7 +223,7 @@ void show_rename_dialog(AppState *state, const char *old_path, const char *curre
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(state->window));
     gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
     gtk_window_set_decorated(GTK_WINDOW(dialog), FALSE);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 380, 210);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 390, 215);
     gtk_widget_add_css_class(dialog, "settings-modal-window");
 
     RenameDialogData *rdd = g_new0(RenameDialogData, 1);
@@ -243,7 +258,8 @@ void show_rename_dialog(AppState *state, const char *old_path, const char *curre
 
     GtkWidget *close_btn = gtk_button_new_from_icon_name("window-close-symbolic");
     gtk_widget_add_css_class(close_btn, "win-ctrl-btn");
-    gtk_widget_set_size_request(close_btn, 26, 26);
+    gtk_widget_add_css_class(close_btn, "modal-close-btn");
+    gtk_widget_set_size_request(close_btn, 28, 28);
     g_signal_connect(close_btn, "clicked", G_CALLBACK(on_rename_cancel_clicked), rdd);
 
     gtk_box_append(GTK_BOX(hdr), hdr_icon);
@@ -276,9 +292,9 @@ void show_rename_dialog(AppState *state, const char *old_path, const char *curre
     gtk_widget_set_margin_top(btn_row, 4);
 
     GtkWidget *cancel_btn = gtk_button_new_with_label("Cancel");
+
     gtk_widget_add_css_class(cancel_btn, "modal-secondary-btn");
     g_signal_connect(cancel_btn, "clicked", G_CALLBACK(on_rename_cancel_clicked), rdd);
-
     GtkWidget *ok_btn = gtk_button_new_with_label("Rename");
     gtk_widget_add_css_class(ok_btn, "modal-primary-btn");
     g_signal_connect(ok_btn, "clicked", G_CALLBACK(on_rename_confirm), rdd);
@@ -383,7 +399,7 @@ void show_create_item_dialog(AppState *state, gboolean is_folder)
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(state->window));
     gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
     gtk_window_set_decorated(GTK_WINDOW(dialog), FALSE);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 380, 210);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 390, 215);
     gtk_widget_add_css_class(dialog, "settings-modal-window");
     CreateItemDialogData *cid = g_new0(CreateItemDialogData, 1);
     cid->state = state;
@@ -411,7 +427,8 @@ void show_create_item_dialog(AppState *state, gboolean is_folder)
     gtk_widget_set_halign(title_lbl, GTK_ALIGN_START);
     GtkWidget *close_btn = gtk_button_new_from_icon_name("window-close-symbolic");
     gtk_widget_add_css_class(close_btn, "win-ctrl-btn");
-    gtk_widget_set_size_request(close_btn, 26, 26);
+    gtk_widget_add_css_class(close_btn, "modal-close-btn");
+    gtk_widget_set_size_request(close_btn, 28, 28);
     g_signal_connect(close_btn, "clicked", G_CALLBACK(on_create_cancel_clicked), cid);
     gtk_box_append(GTK_BOX(hdr), hdr_icon);
     gtk_box_append(GTK_BOX(hdr), title_lbl);
@@ -449,6 +466,18 @@ typedef struct
     char *file_path;
     GtkWidget *dialog;
 } OpenWithData;
+static void close_open_with_cleanly(OpenWithData *owd)
+{
+    if (!owd)
+        return;
+    GtkWidget *dlg = owd->dialog;
+    g_free(owd->file_path);
+    g_free(owd);
+    if (dlg && GTK_IS_WINDOW(dlg))
+    {
+        gtk_window_destroy(GTK_WINDOW(dlg));
+    }
+}
 static void on_open_with_row_activated(GtkListBox *box, GtkListBoxRow *row, gpointer user_data)
 {
     (void)box;
@@ -462,25 +491,28 @@ static void on_open_with_row_activated(GtkListBox *box, GtkListBoxRow *row, gpoi
         g_list_free(files);
         g_object_unref(file);
     }
-    GtkWidget *dlg = owd->dialog;
-    g_free(owd->file_path);
-    g_free(owd);
-    if (dlg && GTK_IS_WINDOW(dlg))
-    {
-        gtk_window_destroy(GTK_WINDOW(dlg));
-    }
+    close_open_with_cleanly(owd);
 }
 static void on_open_with_close_clicked(GtkButton *btn, gpointer user_data)
 {
     (void)btn;
-    OpenWithData *owd = (OpenWithData *)user_data;
-    GtkWidget *dlg = owd->dialog;
-    g_free(owd->file_path);
-    g_free(owd);
-    if (dlg && GTK_IS_WINDOW(dlg))
+    close_open_with_cleanly((OpenWithData *)user_data);
+}
+static gboolean on_open_with_key_pressed(GtkEventControllerKey *ctrl,
+                                         guint keyval,
+                                         guint keycode,
+                                         GdkModifierType mods,
+                                         gpointer user_data)
+{
+    (void)ctrl;
+    (void)keycode;
+    (void)mods;
+    if (keyval == GDK_KEY_Escape)
     {
-        gtk_window_destroy(GTK_WINDOW(dlg));
+        close_open_with_cleanly((OpenWithData *)user_data);
+        return TRUE;
     }
+    return FALSE;
 }
 void show_open_with_dialog(AppState *state, const char *file_path)
 {
@@ -497,11 +529,14 @@ void show_open_with_dialog(AppState *state, const char *file_path)
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(state->window));
     gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
     gtk_window_set_decorated(GTK_WINDOW(dialog), FALSE);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 380, 420);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 390, 430);
     gtk_widget_add_css_class(dialog, "settings-modal-window");
     OpenWithData *owd = g_new0(OpenWithData, 1);
     owd->file_path = g_strdup(file_path);
     owd->dialog = dialog;
+    GtkEventController *key_ctrl = gtk_event_controller_key_new();
+    g_signal_connect(key_ctrl, "key-pressed", G_CALLBACK(on_open_with_key_pressed), owd);
+    gtk_widget_add_controller(dialog, key_ctrl);
     GtkWidget *overlay = gtk_overlay_new();
     GtkWidget *bg_canvas = gtk_drawing_area_new();
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(bg_canvas), on_draw_modal_squircle, NULL, NULL);
@@ -510,14 +545,20 @@ void show_open_with_dialog(AppState *state, const char *file_path)
     gtk_widget_add_css_class(card, "squircle-modal-inner");
     GtkWidget *handle = gtk_window_handle_new();
     GtkWidget *hdr = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    gtk_widget_add_css_class(hdr, "settings-modal-header");
+    GtkWidget *hdr_icon = gtk_image_new_from_icon_name("system-run-symbolic");
+    gtk_image_set_pixel_size(GTK_IMAGE(hdr_icon), 18);
+    gtk_widget_add_css_class(hdr_icon, "settings-header-icon");
     GtkWidget *title_lbl = gtk_label_new("Open With Application");
     gtk_widget_add_css_class(title_lbl, "settings-modal-title");
     gtk_widget_set_hexpand(title_lbl, TRUE);
     gtk_widget_set_halign(title_lbl, GTK_ALIGN_START);
     GtkWidget *close_btn = gtk_button_new_from_icon_name("window-close-symbolic");
     gtk_widget_add_css_class(close_btn, "win-ctrl-btn");
-    gtk_widget_set_size_request(close_btn, 26, 26);
+    gtk_widget_add_css_class(close_btn, "modal-close-btn");
+    gtk_widget_set_size_request(close_btn, 28, 28);
     g_signal_connect(close_btn, "clicked", G_CALLBACK(on_open_with_close_clicked), owd);
+    gtk_box_append(GTK_BOX(hdr), hdr_icon);
     gtk_box_append(GTK_BOX(hdr), title_lbl);
     gtk_box_append(GTK_BOX(hdr), close_btn);
     gtk_window_handle_set_child(GTK_WINDOW_HANDLE(handle), hdr);
@@ -526,6 +567,7 @@ void show_open_with_dialog(AppState *state, const char *file_path)
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sw), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_widget_set_vexpand(sw, TRUE);
     GtkWidget *listbox = gtk_list_box_new();
+    gtk_widget_add_css_class(listbox, "modal-app-listbox");
     gtk_list_box_set_selection_mode(GTK_LIST_BOX(listbox), GTK_SELECTION_NONE);
     g_signal_connect(listbox, "row-activated", G_CALLBACK(on_open_with_row_activated), owd);
     for (GList *l = apps; l != NULL; l = l->next)
@@ -534,9 +576,11 @@ void show_open_with_dialog(AppState *state, const char *file_path)
         if (!g_app_info_should_show(ai))
             continue;
         GtkWidget *row = gtk_list_box_row_new();
+        gtk_widget_add_css_class(row, "modal-app-list-row");
         g_object_set_data_full(G_OBJECT(row), "app-info", g_object_ref(ai), g_object_unref);
         GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
         gtk_widget_add_css_class(hbox, "settings-row");
+        gtk_widget_add_css_class(hbox, "clickable-modal-row");
         GIcon *gicon = g_app_info_get_icon(ai);
         GtkWidget *icon = gicon
                               ? gtk_image_new_from_gicon(gicon)
@@ -560,7 +604,7 @@ void show_open_with_dialog(AppState *state, const char *file_path)
     gtk_window_set_child(GTK_WINDOW(dialog), overlay);
     gtk_window_present(GTK_WINDOW(dialog));
 }
-/* --- Corner-Matched Squircle Modal Canvas --- */
+/* --- Corner-Matched Dark Slate Superellipse Modal Canvas --- */
 static void draw_squircle_corner_arc(cairo_t *cr,
                                      double cx,
                                      double cy,
@@ -581,26 +625,12 @@ static void draw_squircle_corner_arc(cairo_t *cr,
         cairo_line_to(cr, cx + sx * rx, cy + sy * ry);
     }
 }
-static void on_draw_modal_squircle(GtkDrawingArea *area, cairo_t *cr, int width, int height, gpointer data)
+static void build_modal_squircle_path(cairo_t *cr, double x, double y, double w, double h, double r, double n)
 {
-    (void)area;
-    (void)data;
-    if (width <= 0 || height <= 0)
-        return;
-    cairo_set_antialias(cr, CAIRO_ANTIALIAS_BEST);
-    double pad = 8.0;
-    double x = pad;
-    double y = pad;
-    double w = width - pad * 2.0;
-    double h = height - pad * 2.0;
-    if (w <= 0 || h <= 0)
-        return;
-    double r = MIN(38.0, MIN(w, h) * 0.16);
-    double n = 4.2;
-    cairo_save(cr);
-    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-    cairo_paint(cr);
-    cairo_restore(cr);
+    if (r > w * 0.5)
+        r = w * 0.5;
+    if (r > h * 0.5)
+        r = h * 0.5;
     cairo_new_path(cr);
     cairo_move_to(cr, x + r, y);
     cairo_line_to(cr, x + w - r, y);
@@ -612,11 +642,73 @@ static void on_draw_modal_squircle(GtkDrawingArea *area, cairo_t *cr, int width,
     cairo_line_to(cr, x, y + r);
     draw_squircle_corner_arc(cr, x + r, y + r, r, r, G_PI, 1.5 * G_PI, n);
     cairo_close_path(cr);
-    cairo_set_source_rgba(cr, 0.97, 0.975, 0.98, 0.98);
-    cairo_fill_preserve(cr);
-    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.09);
+}
+static void on_draw_modal_squircle(GtkDrawingArea *area, cairo_t *cr, int width, int height, gpointer data)
+{
+    (void)area;
+    (void)data;
+    if (width <= 0 || height <= 0)
+        return;
+    cairo_set_antialias(cr, CAIRO_ANTIALIAS_BEST);
+    double pad = 12.0;
+    double x = pad;
+    double y = pad;
+    double w = (double)width - pad * 2.0;
+    double h = (double)height - pad * 2.0;
+    if (w <= 0 || h <= 0)
+        return;
+    double r = MIN(42.0, MIN(w, h) * 0.18);
+    double n = 3.8;
+    cairo_save(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+    cairo_restore(cr);
+    /* 1. Soft Ambient Drop Shadow */
+    for (int i = 10; i >= 1; i--)
+    {
+        double spread = (double)i * 0.85;
+        double y_off = (double)i * 0.35;
+        double alpha = 0.012 + (10.0 - i) * 0.003;
+        cairo_save(cr);
+        build_modal_squircle_path(cr,
+                                  x - spread,
+                                  y - spread + y_off,
+                                  w + spread * 2.0,
+                                  h + spread * 2.0,
+                                  r + spread,
+                                  n);
+        cairo_set_source_rgba(cr, 8.0 / 255.0, 10.0 / 255.0, 16.0 / 255.0, alpha);
+        cairo_fill(cr);
+        cairo_restore(cr);
+    }
+    /* 2. Dark Slate-Charcoal Fill */
+    build_modal_squircle_path(cr, x + 1.0, y + 1.0, w - 2.0, h - 2.0, r, n);
+    cairo_pattern_t *bg_grad = cairo_pattern_create_linear(x, y, x, y + h);
+    cairo_pattern_add_color_stop_rgba(bg_grad, 0.00, 46.0 / 255.0, 52.0 / 255.0, 67.0 / 255.0, 0.96);
+    cairo_pattern_add_color_stop_rgba(bg_grad, 0.55, 30.0 / 255.0, 34.0 / 255.0, 45.0 / 255.0, 0.96);
+    cairo_pattern_add_color_stop_rgba(bg_grad, 1.00, 22.0 / 255.0, 26.0 / 255.0, 35.0 / 255.0, 0.97);
+    cairo_set_source(cr, bg_grad);
+    cairo_fill(cr);
+    cairo_pattern_destroy(bg_grad);
+    /* 3. Subtle Inner Specular Glass Bevel */
+    cairo_save(cr);
+    build_modal_squircle_path(cr, x + 2.2, y + 2.2, w - 4.4, h - 4.4, r - 1.2, n);
+    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.16);
     cairo_set_line_width(cr, 1.2);
     cairo_stroke(cr);
+    cairo_restore(cr);
+    /* 4. Signature 2px Warm Orange Gradient Rim */
+    cairo_save(cr);
+    build_modal_squircle_path(cr, x + 1.0, y + 1.0, w - 2.0, h - 2.0, r, n);
+    cairo_pattern_t *rim_grad = cairo_pattern_create_linear(x, y, x + w, y + h);
+    cairo_pattern_add_color_stop_rgba(rim_grad, 0.0, 1.00, 0.72, 0.34, 0.92);
+    cairo_pattern_add_color_stop_rgba(rim_grad, 0.5, 1.00, 0.42, 0.00, 0.95);
+    cairo_pattern_add_color_stop_rgba(rim_grad, 1.0, 0.82, 0.25, 0.00, 0.90);
+    cairo_set_source(cr, rim_grad);
+    cairo_set_line_width(cr, 2.0);
+    cairo_stroke(cr);
+    cairo_pattern_destroy(rim_grad);
+    cairo_restore(cr);
 }
 /* --- Squircle Properties Dialog --- */
 typedef struct
@@ -693,10 +785,10 @@ static void on_folder_size_ready(GObject *source_object, GAsyncResult *res, gpoi
     }
     g_free(stats);
 }
-static void on_properties_close_clicked(GtkButton *btn, gpointer user_data)
+static void close_properties_cleanly(PropertiesDialogData *pdd)
 {
-    (void)btn;
-    PropertiesDialogData *pdd = (PropertiesDialogData *)user_data;
+    if (!pdd)
+        return;
     if (pdd->cancellable)
     {
         g_cancellable_cancel(pdd->cancellable);
@@ -709,6 +801,27 @@ static void on_properties_close_clicked(GtkButton *btn, gpointer user_data)
     {
         gtk_window_destroy(GTK_WINDOW(dlg));
     }
+}
+static void on_properties_close_clicked(GtkButton *btn, gpointer user_data)
+{
+    (void)btn;
+    close_properties_cleanly((PropertiesDialogData *)user_data);
+}
+static gboolean on_properties_key_pressed(GtkEventControllerKey *ctrl,
+                                          guint keyval,
+                                          guint keycode,
+                                          GdkModifierType mods,
+                                          gpointer user_data)
+{
+    (void)ctrl;
+    (void)keycode;
+    (void)mods;
+    if (keyval == GDK_KEY_Escape)
+    {
+        close_properties_cleanly((PropertiesDialogData *)user_data);
+        return TRUE;
+    }
+    return FALSE;
 }
 static GtkWidget *add_prop_row(GtkWidget *parent, const char *key_text, const char *val_text)
 {
@@ -770,11 +883,14 @@ void show_properties_dialog(AppState *state, const char *path)
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(state->window));
     gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
     gtk_window_set_decorated(GTK_WINDOW(dialog), FALSE);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 420, 390);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 430, 415);
     gtk_widget_add_css_class(dialog, "settings-modal-window");
     PropertiesDialogData *pdd = g_new0(PropertiesDialogData, 1);
     pdd->dialog = dialog;
     pdd->target_path = g_strdup(path);
+    GtkEventController *key_ctrl = gtk_event_controller_key_new();
+    g_signal_connect(key_ctrl, "key-pressed", G_CALLBACK(on_properties_key_pressed), pdd);
+    gtk_widget_add_controller(dialog, key_ctrl);
     GtkWidget *overlay = gtk_overlay_new();
     GtkWidget *bg_canvas = gtk_drawing_area_new();
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(bg_canvas), on_draw_modal_squircle, NULL, NULL);
@@ -783,21 +899,28 @@ void show_properties_dialog(AppState *state, const char *path)
     gtk_widget_add_css_class(card, "squircle-modal-inner");
     GtkWidget *handle = gtk_window_handle_new();
     GtkWidget *hdr = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    gtk_widget_add_css_class(hdr, "settings-modal-header");
+    GtkWidget *hdr_icon = gtk_image_new_from_icon_name("dialog-information-symbolic");
+    gtk_image_set_pixel_size(GTK_IMAGE(hdr_icon), 18);
+    gtk_widget_add_css_class(hdr_icon, "settings-header-icon");
     GtkWidget *title_lbl = gtk_label_new("Properties");
     gtk_widget_add_css_class(title_lbl, "settings-modal-title");
     gtk_widget_set_hexpand(title_lbl, TRUE);
     gtk_widget_set_halign(title_lbl, GTK_ALIGN_START);
     GtkWidget *close_btn = gtk_button_new_from_icon_name("window-close-symbolic");
     gtk_widget_add_css_class(close_btn, "win-ctrl-btn");
-    gtk_widget_set_size_request(close_btn, 26, 26);
+    gtk_widget_add_css_class(close_btn, "modal-close-btn");
+    gtk_widget_set_size_request(close_btn, 28, 28);
     g_signal_connect(close_btn, "clicked", G_CALLBACK(on_properties_close_clicked), pdd);
+    gtk_box_append(GTK_BOX(hdr), hdr_icon);
     gtk_box_append(GTK_BOX(hdr), title_lbl);
     gtk_box_append(GTK_BOX(hdr), close_btn);
     gtk_window_handle_set_child(GTK_WINDOW_HANDLE(handle), hdr);
     gtk_box_append(GTK_BOX(card), handle);
     /* Hero Header with Icon & Name */
     GtkWidget *hero = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
-    gtk_widget_set_margin_bottom(hero, 4);
+    gtk_widget_add_css_class(hero, "prop-hero-box");
+    gtk_widget_set_margin_bottom(hero, 2);
     GIcon *gicon = info ? g_file_info_get_icon(info) : NULL;
     GtkWidget *hero_icon = gicon
                                ? gtk_image_new_from_gicon(gicon)
@@ -850,7 +973,6 @@ static void on_settings_hidden_toggled(GObject *sw, GParamSpec *pspec, gpointer 
     if (state->current_path)
         populate_directory(state, state->current_path);
 }
-
 static void on_settings_thumbs_toggled(GObject *sw, GParamSpec *pspec, gpointer user_data)
 {
     (void)pspec;
@@ -860,7 +982,6 @@ static void on_settings_thumbs_toggled(GObject *sw, GParamSpec *pspec, gpointer 
     if (state->current_path)
         populate_directory(state, state->current_path);
 }
-
 static void on_settings_dblclick_toggled(GObject *sw, GParamSpec *pspec, gpointer user_data)
 {
     (void)pspec;
@@ -945,6 +1066,7 @@ static GtkWidget *add_settings_switch_row(GtkWidget *parent,
     gtk_box_append(GTK_BOX(txt_box), t_lbl);
     gtk_box_append(GTK_BOX(txt_box), s_lbl);
     GtkWidget *sw = gtk_switch_new();
+    gtk_widget_add_css_class(sw, "modal-switch");
     gtk_switch_set_active(GTK_SWITCH(sw), initial_val);
     gtk_widget_set_valign(sw, GTK_ALIGN_CENTER);
     g_signal_connect(sw, "notify::active", toggle_cb, state);
@@ -960,7 +1082,7 @@ void show_settings_dialog(AppState *state)
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(state->window));
     gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
     gtk_window_set_decorated(GTK_WINDOW(dialog), FALSE);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 550, 390);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 560, 410);
     gtk_widget_add_css_class(dialog, "settings-modal-window");
     GtkEventController *key_ctrl = gtk_event_controller_key_new();
     g_signal_connect(key_ctrl, "key-pressed", G_CALLBACK(on_settings_key_pressed), dialog);
@@ -984,7 +1106,8 @@ void show_settings_dialog(AppState *state)
     gtk_widget_set_halign(title_lbl, GTK_ALIGN_START);
     GtkWidget *close_btn = gtk_button_new_from_icon_name("window-close-symbolic");
     gtk_widget_add_css_class(close_btn, "win-ctrl-btn");
-    gtk_widget_set_size_request(close_btn, 26, 26);
+    gtk_widget_add_css_class(close_btn, "modal-close-btn");
+    gtk_widget_set_size_request(close_btn, 28, 28);
     g_signal_connect(close_btn, "clicked", G_CALLBACK(on_settings_close_clicked), dialog);
     gtk_box_append(GTK_BOX(hdr), hdr_icon);
     gtk_box_append(GTK_BOX(hdr), title_lbl);
@@ -1006,6 +1129,7 @@ void show_settings_dialog(AppState *state)
     gtk_box_append(GTK_BOX(sort_txt_box), sort_sub);
     const char *sort_options[] = {"Name", "Type", "Date Modified", "Size", NULL};
     GtkWidget *sort_dropdown = gtk_drop_down_new_from_strings(sort_options);
+    gtk_widget_add_css_class(sort_dropdown, "modal-dropdown");
     gtk_drop_down_set_selected(GTK_DROP_DOWN(sort_dropdown), (guint)state->sort_column);
     gtk_widget_set_valign(sort_dropdown, GTK_ALIGN_CENTER);
     g_signal_connect(sort_dropdown, "notify::selected", G_CALLBACK(on_settings_sort_col_changed), state);

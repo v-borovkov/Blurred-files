@@ -1,6 +1,6 @@
 # Blurred Files
 
-A fast, lightweight GTK4 file manager written in C from scratch, featuring a custom superellipse window silhouette, translucent Wayfire-blurred sidebar, and tactile Neumorphic header controls.
+A fast, lightweight GTK4 file manager written in C from scratch, featuring a custom superellipse window silhouette, translucent Wayfire-blurred sidebar, dark slate Neumorphic controls, and a Wayland `wlr-layer-shell` desktop mode.
 
 > **Note:** Blurred Files is currently in **beta**. While core file operations and automated tests are in place, please report any compositor-specific quirks or edge cases via GitHub Issues.
 
@@ -11,13 +11,14 @@ A fast, lightweight GTK4 file manager written in C from scratch, featuring a cus
 ## Features
 
 - **Custom Superellipse UI & Tactile Controls**
-  - Borderless superellipse window silhouette
-  - Translucent dark sidebar designed for Wayland compositor blur (Wayfire)
-  - 3D ice-blue concave header bar with Neumorphic buttons and warm orange hover/active glow
+  - Borderless 8-way edge-resizable superellipse window silhouette
+  - Translucent dark slate-charcoal sidebar designed for Wayland compositor blur (Wayfire)
+  - 3D dark slate-grey concave header bar with Neumorphic buttons and warm orange hover/active glow
   - Smooth alpha-masked breadcrumb scrolling with right-click path copy
+  - Wayland `wlr-layer-shell` background desktop icons mode (`blurred_files --desktop`)
 - **Browsing & Views**
-  - **Icon Grid View** with 5-tier zoom (`Ctrl` + Mouse Wheel or `Ctrl` + `+`/`-`/`0`) and **Detailed List View** with sortable columns (`Name`, `Type`, `Modified`, `Size`)
-  - Async image thumbnail previews
+  - **Icon Grid View** with 5-tier zoom (`Ctrl` + Mouse Wheel or `Ctrl` + `+`/`-`/`0`) and **Detailed List View** with sortable, live-resizable columns (`Name`, `Type`, `Modified`, `Size`)
+  - Async GPU-accelerated image thumbnail previews
   - Instant live search filtering (`Ctrl+F`), hidden file toggle (`Ctrl+H`), and directory change monitoring
   - Mouse side-button (`Back` / `Forward`) and keyboard navigation (`Alt+Left`, `Alt+Right`, `Backspace`)
 - **File Operations & Productivity**
@@ -26,7 +27,7 @@ A fast, lightweight GTK4 file manager written in C from scratch, featuring a cus
   - Drag-and-drop moving across folders, sidebar bookmarks, Trash, and external windows
   - Safe Trash management (`Delete`), item restoration, and non-blocking background **Empty Trash**
   - Built-in archive creation (`.zip`, `.tar.gz`) and one-click archive extraction
-  - Custom squircle modals for **Properties** (`Space`), **Rename**, **New Folder / File** (`Ctrl+Shift+N`), **Open With**, and **Preferences**
+  - Custom dark-slate superellipse modals for **Properties** (`Space`), **Rename**, **New Folder / File** (`Ctrl+Shift+N`), **Open With**, and **Preferences**
   - Pinned favorite folders, external volume mounting/unmounting, and **Open in Terminal** (`Ctrl+Alt+T`)
 
 ---
@@ -35,19 +36,19 @@ A fast, lightweight GTK4 file manager written in C from scratch, featuring a cus
 
 ### Prerequisites
 
-Install the GTK4 development libraries and build tools:
+Install the GTK4 and `gtk4-layer-shell` development libraries and build tools:
 
 - **openSUSE:**
   ```bash
-  sudo zypper install -y gcc make pkg-config gtk4-devel
+  sudo zypper install -y gcc make pkg-config gtk4-devel gtk4-layer-shell-devel
   ```
 - **Debian / Ubuntu:**
   ```bash
-  sudo apt update && sudo apt install -y build-essential pkg-config libgtk-4-dev
+  sudo apt update && sudo apt install -y build-essential pkg-config libgtk-4-dev libgtk4-layer-shell-dev
   ```
 - **Fedora:**
   ```bash
-  sudo dnf install -y gcc make pkgconf-pkg-config gtk4-devel
+  sudo dnf install -y gcc make pkgconf-pkg-config gtk4-devel gtk4-layer-shell-devel
   ```
 
 ### Build & Install from Source
@@ -63,6 +64,12 @@ Run the application from your app launcher or terminal:
 
 ```bash
 blurred_files
+```
+
+Or launch background desktop icons mode on Wayland (`wlr-layer-shell`):
+
+```bash
+blurred_files --desktop
 ```
 
 ### Build `.deb` or `.rpm` Packages
@@ -81,7 +88,7 @@ blurred_files
 ### Running Automated Tests
 
 ```bash
-make test
+make sanitize && make test
 ```
 
 ---

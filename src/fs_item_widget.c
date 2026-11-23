@@ -392,12 +392,14 @@ static void on_folder_drop_leave(GtkDropTarget *target, gpointer user_data)
     gtk_widget_remove_css_class(dest_folder->card_widget, "drop-target-hover");
 }
 /* --- Unified Primary Click Handler (Single-Click, Double-Click, Ctrl+Click) --- */
+/* --- Unified Primary Click Handler (Single-Click, Double-Click, Ctrl+Click) --- */
 static void on_item_primary_pressed(GtkGestureClick *gesture, int n_press, double x, double y, gpointer user_data)
 {
     (void)x;
     (void)y;
     ItemData *id = (ItemData *)user_data;
     GdkModifierType mods = gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
+
     if ((mods & GDK_CONTROL_MASK) != 0)
     {
         if (gtk_widget_has_css_class(id->card_widget, "selected"))
@@ -412,6 +414,7 @@ static void on_item_primary_pressed(GtkGestureClick *gesture, int n_press, doubl
         gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
         return;
     }
+
     if (id->state->double_click_open)
     {
         if (n_press == 1)
@@ -426,13 +429,25 @@ static void on_item_primary_pressed(GtkGestureClick *gesture, int n_press, doubl
             open_item_action(id);
         }
     }
-    else
+}
+
+static void on_item_primary_released(GtkGestureClick *gesture, int n_press, double x, double y, gpointer user_data)
+{
+    ItemData *id = (ItemData *)user_data;
+    if (id->state->double_click_open)
+        return;
+
+    GdkModifierType mods = gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
+    if ((mods & GDK_CONTROL_MASK) != 0)
+        return;
+
+    /* Ensure pointer was released inside the card and not cancelled by a drag */
+    int w = gtk_widget_get_width(id->card_widget);
+    int h = gtk_widget_get_height(id->card_widget);
+    if (n_press == 1 && x >= 0.0 && y >= 0.0 && x <= (double)w && y <= (double)h)
     {
-        if (n_press == 1)
-        {
-            gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
-            open_item_action(id);
-        }
+        gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+        open_item_action(id);
     }
 }
 /* --- Nautilus-Style 5-Tier Discrete Zoom Metrics --- */
@@ -575,6 +590,7 @@ GtkWidget *create_real_file_item(AppState *state, GFileInfo *info, const char *p
     char *full_path = g_build_filename(parent_path, name, NULL);
     const char *content_type = g_file_info_get_content_type(info);
     goffset file_size = g_file_info_get_size(info);
+
     GtkWidget *btn = gtk_button_new();
     gtk_widget_add_css_class(btn, "file-card-btn");
     if (state->is_desktop_mode)
@@ -583,56 +599,77 @@ GtkWidget *create_real_file_item(AppState *state, GFileInfo *info, const char *p
     }
     gtk_widget_set_cursor_from_name(btn, "pointer");
     g_object_set_data_full(G_OBJECT(btn), "full-path", g_strdup(full_path), g_free);
+
     GIcon *gicon = g_file_info_get_icon(info);
     if (gicon)
     {
         g_object_set_data_full(G_OBJECT(btn), "gicon", g_object_ref(gicon), g_object_unref);
     }
+
     gboolean can_thumb = (!is_dir && state->enable_thumbnails && content_type &&
                           g_str_has_prefix(content_type, "image/") &&
                           file_size > 0 && file_size < (goffset)200 * 1024 * 1024);
+
     if (state->is_list_view)
     {
+        int type_w = (state->col_type_w > 0) ? state->col_type_w : 130;
+        int date_w = (state->col_date_w > 0) ? state->col_date_w : 145;
+        int size_w = (state->col_size_w > 0) ? state->col_size_w : 75;
+
         gtk_widget_set_hexpand(btn, TRUE);
         GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 14);
         gtk_widget_add_css_class(row, "file-list-row");
+
         GtkWidget *visual_slot = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
         gtk_widget_set_size_request(visual_slot, 28, 28);
         gtk_widget_set_overflow(visual_slot, GTK_OVERFLOW_HIDDEN);
         gtk_widget_set_valign(visual_slot, GTK_ALIGN_CENTER);
+
         GtkWidget *icon = gicon
                               ? gtk_image_new_from_gicon(gicon)
                               : gtk_image_new_from_icon_name(is_dir ? "folder" : "text-x-generic");
         gtk_image_set_pixel_size(GTK_IMAGE(icon), 24);
         gtk_box_append(GTK_BOX(visual_slot), icon);
+
         if (can_thumb)
         {
             queue_async_thumbnail(state, visual_slot, full_path, 56, 56);
         }
+
         GtkWidget *name_lbl = gtk_label_new(name);
         gtk_widget_add_css_class(name_lbl, "file-list-label");
         gtk_widget_set_hexpand(name_lbl, TRUE);
         gtk_widget_set_halign(name_lbl, GTK_ALIGN_START);
         gtk_label_set_ellipsize(GTK_LABEL(name_lbl), PANGO_ELLIPSIZE_END);
+
         char *type_str = format_file_type_label(info, is_dir);
         GtkWidget *type_lbl = gtk_label_new(type_str);
         gtk_widget_add_css_class(type_lbl, "file-list-col-type");
-        gtk_widget_set_size_request(type_lbl, 130, -1);
+        gtk_widget_set_size_request(type_lbl, type_w, -1);
         gtk_widget_set_halign(type_lbl, GTK_ALIGN_START);
         gtk_label_set_ellipsize(GTK_LABEL(type_lbl), PANGO_ELLIPSIZE_END);
         g_free(type_str);
+
         char *date_str = format_modified_date(info);
         GtkWidget *date_lbl = gtk_label_new(date_str);
         gtk_widget_add_css_class(date_lbl, "file-list-col-date");
-        gtk_widget_set_size_request(date_lbl, 145, -1);
+        gtk_widget_set_size_request(date_lbl, date_w, -1);
         gtk_widget_set_halign(date_lbl, GTK_ALIGN_START);
+        gtk_label_set_ellipsize(GTK_LABEL(date_lbl), PANGO_ELLIPSIZE_END);
         g_free(date_str);
+
         char *size_str = is_dir ? g_strdup("—") : g_format_size((guint64)file_size);
         GtkWidget *size_lbl = gtk_label_new(size_str);
         gtk_widget_add_css_class(size_lbl, "file-list-col-size");
-        gtk_widget_set_size_request(size_lbl, 75, -1);
+        gtk_widget_set_size_request(size_lbl, size_w, -1);
         gtk_widget_set_halign(size_lbl, GTK_ALIGN_END);
+        gtk_label_set_ellipsize(GTK_LABEL(size_lbl), PANGO_ELLIPSIZE_END);
         g_free(size_str);
+
+        g_object_set_data(G_OBJECT(btn), "col-type-lbl", type_lbl);
+        g_object_set_data(G_OBJECT(btn), "col-date-lbl", date_lbl);
+        g_object_set_data(G_OBJECT(btn), "col-size-lbl", size_lbl);
+
         gtk_box_append(GTK_BOX(row), visual_slot);
         gtk_box_append(GTK_BOX(row), name_lbl);
         gtk_box_append(GTK_BOX(row), type_lbl);
@@ -644,27 +681,33 @@ GtkWidget *create_real_file_item(AppState *state, GFileInfo *info, const char *p
     {
         int card_w, base_icon, slot_w, slot_h, max_chars;
         get_nautilus_zoom_metrics(state, &card_w, &base_icon, &slot_w, &slot_h, &max_chars);
+
         gtk_widget_set_halign(btn, GTK_ALIGN_CENTER);
         gtk_widget_set_valign(btn, GTK_ALIGN_START);
         gtk_widget_set_size_request(btn, card_w, -1);
+
         GtkWidget *card = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
         gtk_widget_add_css_class(card, "file-card");
         gtk_widget_set_halign(card, GTK_ALIGN_CENTER);
+
         GtkWidget *visual_slot = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
         gtk_widget_set_size_request(visual_slot, slot_w, slot_h);
         gtk_widget_set_overflow(visual_slot, GTK_OVERFLOW_HIDDEN);
         gtk_widget_set_halign(visual_slot, GTK_ALIGN_CENTER);
         gtk_widget_set_valign(visual_slot, GTK_ALIGN_CENTER);
+
         GtkWidget *icon = gicon
                               ? gtk_image_new_from_gicon(gicon)
                               : gtk_image_new_from_icon_name(is_dir ? "folder" : "text-x-generic");
         gtk_image_set_pixel_size(GTK_IMAGE(icon), base_icon);
         gtk_widget_set_size_request(icon, base_icon, base_icon);
         gtk_box_append(GTK_BOX(visual_slot), icon);
+
         if (can_thumb)
         {
             queue_async_thumbnail(state, visual_slot, full_path, 180, 140);
         }
+
         GtkWidget *label = gtk_label_new(name);
         gtk_widget_add_css_class(label, "file-label");
         if (state->is_desktop_mode)
@@ -673,31 +716,39 @@ GtkWidget *create_real_file_item(AppState *state, GFileInfo *info, const char *p
         }
         gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
         gtk_label_set_max_width_chars(GTK_LABEL(label), max_chars);
+
         gtk_box_append(GTK_BOX(card), visual_slot);
         gtk_box_append(GTK_BOX(card), label);
         gtk_button_set_child(GTK_BUTTON(btn), card);
+
         g_object_set_data(G_OBJECT(btn), "visual-slot", visual_slot);
         g_object_set_data(G_OBJECT(btn), "label-widget", label);
     }
+
     ItemData *id = g_new0(ItemData, 1);
     id->state = state;
     id->full_path = full_path;
     id->display_name = g_strdup(name);
     id->is_dir = is_dir;
     id->card_widget = btn;
+
     GtkGesture *primary_click = gtk_gesture_click_new();
     gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(primary_click), GDK_BUTTON_PRIMARY);
     gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(primary_click), GTK_PHASE_CAPTURE);
     g_signal_connect(primary_click, "pressed", G_CALLBACK(on_item_primary_pressed), id);
+    g_signal_connect(primary_click, "released", G_CALLBACK(on_item_primary_released), id);
     gtk_widget_add_controller(btn, GTK_EVENT_CONTROLLER(primary_click));
+
     GtkGesture *rclick = gtk_gesture_click_new();
     gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(rclick), GDK_BUTTON_SECONDARY);
     g_signal_connect(rclick, "pressed", G_CALLBACK(on_item_right_clicked), id);
     gtk_widget_add_controller(btn, GTK_EVENT_CONTROLLER(rclick));
+
     GtkDragSource *drag_src = gtk_drag_source_new();
     gtk_drag_source_set_actions(drag_src, GDK_ACTION_MOVE | GDK_ACTION_COPY);
     g_signal_connect(drag_src, "prepare", G_CALLBACK(on_drag_prepare), id);
     gtk_widget_add_controller(btn, GTK_EVENT_CONTROLLER(drag_src));
+
     if (is_dir)
     {
         GType drop_types[] = {GDK_TYPE_FILE_LIST, G_TYPE_FILE};
@@ -708,6 +759,7 @@ GtkWidget *create_real_file_item(AppState *state, GFileInfo *info, const char *p
         g_signal_connect(drop_tgt, "leave", G_CALLBACK(on_folder_drop_leave), id);
         gtk_widget_add_controller(btn, GTK_EVENT_CONTROLLER(drop_tgt));
     }
+
     g_object_set_data_full(G_OBJECT(btn), "item-data", id, destroy_item_data);
     return btn;
 }

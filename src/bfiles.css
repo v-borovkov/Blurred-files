@@ -41,11 +41,9 @@ button.sidebar-btn {
 
 button.sidebar-btn:hover {
     background-color: transparent;
-    background-image: linear-gradient(
-        to bottom,
-        rgba(255, 130, 30, 0.14) 0%,
-        rgba(255, 107, 0, 0.04) 100%
-    );
+    background-image: linear-gradient(to bottom,
+            rgba(255, 130, 30, 0.14) 0%,
+            rgba(255, 107, 0, 0.04) 100%);
     background-clip: padding-box;
     color: #ff8c2b;
     border: 2px solid #ff7e1f;
@@ -65,11 +63,9 @@ button.sidebar-btn:hover label {
 
 button.sidebar-btn.active {
     background-color: transparent;
-    background-image: linear-gradient(
-        to bottom,
-        rgba(255, 130, 30, 0.22) 0%,
-        rgba(255, 107, 0, 0.06) 100%
-    );
+    background-image: linear-gradient(to bottom,
+            rgba(255, 130, 30, 0.22) 0%,
+            rgba(255, 107, 0, 0.06) 100%);
     background-clip: padding-box;
     color: #ff7e1f;
     border: 2px solid #ff6b00;
@@ -119,16 +115,15 @@ scrolledwindow.sidebar-scroll scrollbar slider:hover {
     background-color: rgba(255, 255, 255, 0.35);
 }
 
-
-/* --- Right Content Area & Bright Cold Header Bar --- */
+/* --- Right Content Area & Dark Slate Header Bar --- */
 .content-controls {
     background: transparent;
-    padding: 0 0 14px 0;
+    padding: 0 10px 0 15px;
 }
 
 .squircle-header-content {
     min-height: 68px;
-    padding: 12px 40px 4px 34px;
+    padding: 10px 64px 0 64px;
     background-color: transparent;
     background-image: none;
     border: none;
@@ -137,34 +132,34 @@ scrolledwindow.sidebar-scroll scrollbar slider:hover {
 
 .slash-label,
 .breadcrumb-sep {
-    color: #7c8ea8;
+    color: rgba(235, 240, 248, 0.65);
     font-size: 13px;
     font-weight: 700;
 }
 
-/* --- Idle Header Buttons & Breadcrumbs: Fixed 2px Border (Zero Hover Shift) --- */
+/* --- Idle Header Buttons & Breadcrumbs: Dark Neomorphic Style --- */
 button.nav-btn,
 button.view-btn,
 button.breadcrumb-pill {
     min-height: 30px;
     min-width: 30px;
     padding: 0 11px;
-    color: #3b4a5e;
+    color: #e6ecf5;
     font-size: 12px;
     font-weight: 600;
     border: 2px solid transparent;
     border-radius: 11px;
-    background-color: #e4ecf6;
+    background-color: #3a4152;
     background-image:
-        linear-gradient(to bottom, #ffffff 0%, #dce6f3 100%),
-        linear-gradient(145deg, rgba(190, 206, 228, 0.85) 0%, rgba(145, 166, 196, 0.85) 100%);
+        linear-gradient(to bottom, #4b5469 0%, #343b4b 100%),
+        linear-gradient(145deg, rgba(130, 144, 172, 0.55) 0%, rgba(32, 37, 48, 0.85) 100%);
     background-origin: border-box;
     background-clip: padding-box, border-box;
     box-shadow:
-        inset 0 1.5px 1px rgba(255, 255, 255, 1.0),
-        inset 0 -1px 1px rgba(135, 156, 186, 0.42),
-        -2px -2px 5px rgba(255, 255, 255, 0.90),
-        2px 3px 6px rgba(120, 142, 174, 0.40);
+        inset 0 1px 1px rgba(255, 255, 255, 0.24),
+        inset 0 -1px 1px rgba(18, 22, 30, 0.55),
+        -2px -2px 4px rgba(255, 255, 255, 0.08),
+        2px 3px 6px rgba(12, 15, 22, 0.52);
     transition: all 140ms ease;
 }
 
@@ -173,25 +168,22 @@ button.view-btn {
     padding: 0;
 }
 
-/* Hover & Focus: Orange Light-Stripe + Warm Glow */
+/* Hover: Orange Light-Stripe + Warm Glow */
 button.nav-btn:hover,
-button.nav-btn:focus,
 button.view-btn:hover,
-button.view-btn:focus,
 button.breadcrumb-pill:hover {
-    color: #d95300;
+    color: #ffb857;
     border: 2px solid transparent;
     border-radius: 11px;
     background-image:
-        linear-gradient(to bottom, #ffffff 0%, #eaf1fa 100%),
+        linear-gradient(to bottom, #545f76 0%, #3b4355 100%),
         linear-gradient(145deg, #ffc470 0%, #ff730a 55%, #e04b00 100%);
     background-origin: border-box;
     background-clip: padding-box, border-box;
     box-shadow:
-        inset 0 1.5px 1px rgba(255, 255, 255, 1.0),
-        -2px -2px 5px rgba(255, 255, 255, 0.95),
-        3px 4px 8px rgba(255, 107, 0, 0.36),
-        0 0 15px rgba(255, 118, 20, 0.52);
+        inset 0 1px 1px rgba(255, 255, 255, 0.32),
+        2px 3px 8px rgba(255, 107, 0, 0.36),
+        0 0 14px rgba(255, 118, 20, 0.48);
 }
 
 /* Pressed State */
@@ -201,96 +193,94 @@ button.breadcrumb-pill:active {
     border: 2px solid transparent;
     border-radius: 11px;
     background-image:
-        linear-gradient(to bottom, #d4dfee 0%, #eef4fc 100%),
+        linear-gradient(to bottom, #2c3240 0%, #3d4557 100%),
         linear-gradient(145deg, #d94600 0%, #ff7b1c 100%);
     background-origin: border-box;
     background-clip: padding-box, border-box;
     box-shadow:
-        inset 2px 2px 4px rgba(110, 132, 164, 0.48),
-        inset -1px -1px 3px rgba(255, 255, 255, 0.85),
-        0 0 8px rgba(255, 110, 15, 0.32);
+        inset 2px 2px 4px rgba(14, 17, 24, 0.65),
+        inset -1px -1px 2px rgba(255, 255, 255, 0.14);
 }
 
-/* Disabled State: Bright Cool Neumorphic Rim (Matches Other Header Buttons) */
+/* Disabled State */
 button.nav-btn:disabled,
 button.view-btn:disabled {
     opacity: 1.0;
-    color: rgba(70, 84, 104, 0.42);
+    color: rgba(230, 236, 245, 0.32);
     border: 2px solid transparent;
     border-radius: 11px;
     background-image:
-        linear-gradient(to bottom, #e8f0fa 0%, #dce6f3 100%),
-        linear-gradient(145deg, rgba(210, 222, 238, 0.90) 0%, rgba(175, 192, 216, 0.85) 100%);
+        linear-gradient(to bottom, #3c4354 0%, #303645 100%),
+        linear-gradient(145deg, rgba(110, 122, 148, 0.35) 0%, rgba(28, 33, 44, 0.70) 100%);
     background-origin: border-box;
     background-clip: padding-box, border-box;
     box-shadow:
-        inset 1px 1px 2px rgba(145, 165, 192, 0.30),
-        inset -1px -1px 2px rgba(255, 255, 255, 0.92);
+        inset 1px 1px 2px rgba(16, 20, 28, 0.45),
+        inset -1px -1px 2px rgba(255, 255, 255, 0.10);
 }
 
-/* Active View Toggle & Active/Last Breadcrumb Folder: Lit Orange Light-Stripe + Warm Glow */
+/* Active View Toggle & Active/Last Breadcrumb Folder */
 button.view-btn.active,
 button.breadcrumb-pill.active {
-    color: #d95300;
+    color: #ffb857;
     font-weight: 700;
     border: 2px solid transparent;
     border-radius: 11px;
     background-image:
-        linear-gradient(to bottom, #fffaf4 0%, #ffe6cc 100%),
-        linear-gradient(145deg, #ffb454 0%, #ff6b00 55%, #cc3e00 100%);
+        linear-gradient(to bottom, #52443a 0%, #3a312c 100%),
+        linear-gradient(145deg, #ffc470 0%, #ff730a 55%, #d94b00 100%);
     background-origin: border-box;
     background-clip: padding-box, border-box;
     box-shadow:
-        inset 0 1.5px 1px rgba(255, 255, 255, 1.0),
-        -2px -2px 5px rgba(255, 255, 255, 0.95),
-        3px 4px 8px rgba(255, 107, 0, 0.38),
+        inset 0 1px 1px rgba(255, 255, 255, 0.30),
+        2px 3px 8px rgba(255, 107, 0, 0.36),
         0 0 15px rgba(255, 118, 20, 0.50);
 }
 
-/* --- Inset Neumorphic Search Bar --- */
+/* --- Inset Dark Neumorphic Search Bar --- */
 entry.header-search {
     min-height: 30px;
     padding: 0 12px;
-    background-color: #dce6f3;
-    background-image: linear-gradient(145deg, #cfdbe9 0%, #eaf1fa 100%);
-    color: #3b4a5e;
-    border: 1px solid rgba(255, 255, 255, 0.72);
+    background-color: #2c3240;
+    background-image: linear-gradient(145deg, #252a36 0%, #373f50 100%);
+    color: #f3f5f8;
+    border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 11px;
     font-size: 12px;
     box-shadow:
-        inset 2px 2px 5px rgba(125, 148, 180, 0.48),
-        inset -2px -2px 5px rgba(255, 255, 255, 0.92);
+        inset 2px 2px 5px rgba(12, 15, 22, 0.65),
+        inset -1px -1px 3px rgba(255, 255, 255, 0.12);
 }
 
 entry.header-search:focus-within {
-    background-color: #ffffff;
+    background-color: #232834;
     background-image: none;
-    color: #1e272e;
+    color: #ffffff;
     border: 1.5px solid #ff6b00;
     box-shadow:
-        0 0 12px rgba(255, 118, 20, 0.38),
-        inset 1px 1px 3px rgba(0, 0, 0, 0.08);
+        0 0 12px rgba(255, 118, 20, 0.42),
+        inset 1px 1px 3px rgba(0, 0, 0, 0.35);
 }
 
-/* --- Circular Neumorphic Window Controls with Matching Silver-Grey Rim --- */
+/* --- Circular Dark Neumorphic Window Controls --- */
 button.win-ctrl-btn,
 button.win-ctrl-btn:active {
     min-height: 30px;
     min-width: 30px;
     padding: 0;
-    color: #3b4a5e;
+    color: #e6ecf5;
     border: 2px solid transparent;
     border-radius: 999px;
-    background-color: #dce5f2;
+    background-color: #3a4152;
     background-image:
-        linear-gradient(145deg, #eef4fc 0%, #c6d3e5 100%),
-        linear-gradient(145deg, rgba(205, 218, 236, 0.92) 0%, rgba(155, 174, 202, 0.88) 100%);
+        linear-gradient(145deg, #4e586e 0%, #313847 100%),
+        linear-gradient(145deg, rgba(135, 150, 178, 0.55) 0%, rgba(28, 33, 44, 0.85) 100%);
     background-origin: border-box;
     background-clip: padding-box, border-box;
     box-shadow:
-        -3px -3px 6px rgba(255, 255, 255, 0.95),
-        3px 4px 7px rgba(125, 148, 180, 0.50),
-        inset 0 1px 1px rgba(255, 255, 255, 0.90);
+        -2px -2px 4px rgba(255, 255, 255, 0.08),
+        2px 3px 6px rgba(12, 15, 22, 0.55),
+        inset 0 1px 1px rgba(255, 255, 255, 0.24);
     transition: all 120ms ease;
 }
 
@@ -298,65 +288,76 @@ button.win-ctrl-btn:hover {
     border: 2px solid transparent;
     border-radius: 999px;
     background-image:
-        linear-gradient(145deg, #f5f9fe 0%, #dce6f3 100%),
+        linear-gradient(145deg, #566178 0%, #3a4254 100%),
         linear-gradient(145deg, #ffc470 0%, #ff730a 55%, #e04b00 100%);
     background-origin: border-box;
     background-clip: padding-box, border-box;
     box-shadow:
-        inset 0 1.5px 1px rgba(255, 255, 255, 1.0),
-        -2px -2px 5px rgba(255, 255, 255, 0.95),
-        3px 4px 8px rgba(255, 107, 0, 0.36),
-        0 0 15px rgba(255, 118, 20, 0.52);
+        inset 0 1px 1px rgba(255, 255, 255, 0.32),
+        2px 3px 8px rgba(255, 107, 0, 0.36),
+        0 0 14px rgba(255, 118, 20, 0.48);
 }
 
 button.win-ctrl-btn image {
     -gtk-icon-size: 14px;
 }
-/* Minimize (Yellow/Amber), Maximize (Green), Close (Red) Symbolic Icons */
-.squircle-header-content > box:last-child > button.win-ctrl-btn:first-child image {
-    color: #d98a00;
 
+/* Minimize (Amber), Maximize (Green), Close (Red) Symbolic Icons */
+.squircle-header-content>box:last-child>button.win-ctrl-btn:first-child image {
+    color: #f0a52a;
 }
 
-.squircle-header-content > box:last-child > button.win-ctrl-btn:nth-child(2) image {
-    color: #1e9e4a;
-
+.squircle-header-content>box:last-child>button.win-ctrl-btn:nth-child(2) image {
+    color: #2ecc71;
 }
 
-.squircle-header-content > box:last-child > button.win-ctrl-btn:last-child image {
-    color: #dc3545;
-
+.squircle-header-content>box:last-child>button.win-ctrl-btn:last-child image {
+    color: #ff5f56;
 }
+
 /* --- Scrollable File Cards Grid --- */
 .files-grid {
-    padding: 12px 42px 24px 42px;
+    padding: 12px 12px 24px 12px;
 }
 
-button.file-card-btn {
+button.file-card-btn,
+button.file-card-btn:hover,
+button.file-card-btn:focus,
+button.file-card-btn:active {
+    background: transparent;
     background-color: transparent;
     background-image: none;
-    border: 1px solid transparent;
-    border-radius: 16px;
-    padding: 8px 6px;
+    border: none;
+    outline: none;
+    border-radius: 22px;
+    padding: 6px;
     min-width: 0;
     box-shadow: none;
     transition: all 130ms ease;
 }
 
 .file-card {
-    background: #ffffff;
+    background-image: linear-gradient(180deg,
+            rgba(56, 63, 78, 0.85) 0%,
+            rgba(42, 47, 60, 0.85) 100%);
     border-radius: 22px;
     padding: 14px 16px 12px 16px;
     min-width: 100px;
     min-height: 98px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-top-color: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
     transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 }
 
 .file-card-btn:hover .file-card {
-    box-shadow: 0 10px 24px rgba(255, 107, 0, 0.14);
-    border-color: rgba(255, 107, 0, 0.30);
+    background-image: linear-gradient(180deg,
+            rgba(68, 76, 94, 0.95) 0%,
+            rgba(48, 54, 68, 0.95) 100%);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.36),
+        0 0 14px rgba(255, 107, 0, 0.24);
+    border-color: rgba(255, 148, 56, 0.72);
 }
 
 .image-preview-thumb {
@@ -364,16 +365,17 @@ button.file-card-btn {
 }
 
 .file-label {
-    color: #2c3e50;
+    color: #eef2f8;
     font-size: 12px;
     font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
 }
 
 /* --- List View Rows & Sortable Column Headers --- */
 .list-column-headers {
-    margin: 4px 42px 0 42px;
+    margin: 4px 12px 0 12px;
     padding: 4px 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 .list-col-btn {
@@ -381,34 +383,57 @@ button.file-card-btn {
     background-image: none;
     border: none;
     box-shadow: none;
-    padding: 4px 6px;
+    min-height: 24px;
+    padding: 2px 6px;
     border-radius: 8px;
-    color: #5d6d7e;
+    color: rgba(235, 240, 248, 0.65);
     font-size: 11px;
     font-weight: 700;
 }
 
 .list-col-btn:hover {
-    background: rgba(255, 107, 0, 0.10);
-    color: #d94e00;
+    background: rgba(255, 107, 0, 0.16);
+    color: #ffb857;
+}
+
+.list-col-resizer {
+    min-width: 8px;
+    min-height: 20px;
+    padding: 2px 0;
+}
+
+.list-col-resizer-bar {
+    min-width: 2px;
+    min-height: 14px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.14);
+    transition: background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.list-col-resizer:hover .list-col-resizer-bar,
+.list-col-resizer:active .list-col-resizer-bar {
+    background-color: #ff6b00;
+    box-shadow: 0 0 8px rgba(255, 118, 20, 0.65);
 }
 
 .file-list-row {
-    background: #ffffff;
+    background-image: linear-gradient(180deg,
+            rgba(56, 63, 78, 0.85) 0%,
+            rgba(42, 47, 60, 0.85) 100%);
     border-radius: 14px;
     padding: 8px 16px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
     transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
 .file-card-btn:hover .file-list-row {
-    border-color: rgba(255, 107, 0, 0.35);
-    box-shadow: 0 5px 14px rgba(255, 107, 0, 0.12);
+    border-color: rgba(255, 148, 56, 0.72);
+    box-shadow: 0 5px 14px rgba(255, 107, 0, 0.22);
 }
 
 .file-list-label {
-    color: #2c3e50;
+    color: #eef2f8;
     font-size: 13px;
     font-weight: 600;
 }
@@ -416,61 +441,60 @@ button.file-card-btn {
 .file-list-col-type,
 .file-list-col-date,
 .file-list-col-size {
-    color: #6c7a89;
+    color: rgba(235, 240, 248, 0.62);
     font-size: 12px;
     font-weight: 500;
 }
 
 /* --- Selection, Drop Target & Marquee --- */
 .selection-marquee {
-    background-color: rgba(255, 107, 0, 0.16);
+    background-color: rgba(255, 107, 0, 0.18);
     border: 1.5px solid #ff6b00;
     border-radius: 6px;
 }
 
 .file-card-btn.selected .file-card,
 .file-card-btn.selected .file-list-row {
-    background-color: rgba(255, 107, 0, 0.10);
+    background-image: linear-gradient(180deg,
+            rgba(255, 148, 56, 0.28) 0%,
+            rgba(255, 107, 0, 0.16) 100%);
     border: 1.5px solid #ff6b00;
-    box-shadow: 0 6px 18px rgba(255, 107, 0, 0.18);
+    box-shadow: 0 6px 18px rgba(255, 107, 0, 0.26);
 }
 
 button.file-card-btn.selected .file-label,
 button.file-card-btn.selected .file-list-label {
-    color: #d95300;
-
+    color: #ffb857;
     font-weight: 700;
 }
 
 .file-card-btn.drop-target-hover .file-card,
 .file-card-btn.drop-target-hover .file-list-row {
-    background-color: rgba(255, 107, 0, 0.22);
+    background-color: rgba(255, 107, 0, 0.24);
     border: 1.5px dashed #ff6b00;
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.85),
-        0 4px 12px rgba(255, 107, 0, 0.28);
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.30);
 }
 
 /* --- Bottom Status Bar --- */
 .bottom-status-bar {
-    margin: 5px 42px 0 42px;
-    padding: 6px 14px 0 14px;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    margin: 5px 12px 0 12px;
+    padding: 6px 14px 12px 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .status-bar-label {
-    color: #7f8c8d;
+    color: rgba(235, 240, 248, 0.62);
     font-size: 11.5px;
     font-weight: 600;
 }
 
 /* --- Right-Click Context Menu Popover --- */
 popover.context-popover contents {
-    background: #ffffff;
+    background: #2b313e;
     border-radius: 16px;
     padding: 6px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
 }
 
 .context-menu-box {
@@ -484,34 +508,34 @@ popover.context-popover contents {
     box-shadow: none;
     border-radius: 10px;
     padding: 6px 12px;
-    color: #2c3e50;
+    color: #eef2f8;
     font-size: 13px;
     font-weight: 600;
 }
 
 .context-menu-btn:hover {
-    background: rgba(255, 107, 0, 0.12);
-    color: #d94e00;
+    background: rgba(255, 107, 0, 0.18);
+    color: #ffb857;
 }
 
 .context-menu-btn.danger:hover {
-    background: rgba(231, 76, 60, 0.12);
-    color: #c0392b;
+    background: rgba(231, 76, 60, 0.18);
+    color: #ff6b6b;
 }
 
 /* --- Instant "Copied!" Breadcrumb Popover --- */
 popover.copied-tooltip-popover>contents {
-    background-color: #1e272e;
+    background-color: #1a1e26;
     color: #ffffff;
     border-radius: 10px;
     padding: 4px 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 107, 0, 0.45);
 }
 
 popover.copied-tooltip-popover>arrow {
-    background-color: #1e272e;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background-color: #1a1e26;
+    border: 1px solid rgba(255, 107, 0, 0.45);
 }
 
 .copied-tooltip-label {
@@ -526,171 +550,360 @@ window.settings-modal-window {
 }
 
 .squircle-modal-inner {
-    padding: 24px 28px 26px 28px;
+    padding: 28px 32px 30px 32px;
 }
 
 .settings-modal-header {
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 .settings-header-icon {
     color: #ff6b00;
+    -gtk-icon-shadow: 0 0 8px rgba(255, 118, 20, 0.45);
 }
 
 .settings-modal-title {
-    color: #1e272e;
+    color: #f3f5f8;
     font-size: 15px;
     font-weight: 700;
 }
 
+button.modal-close-btn image {
+    color: #ff5f56;
+}
+
 .settings-row {
-    background-color: #ffffff;
+    background-color: rgba(56, 63, 78, 0.78);
+    background-image: linear-gradient(180deg,
+            rgba(56, 63, 78, 0.85) 0%,
+            rgba(42, 47, 60, 0.85) 100%);
     border-radius: 14px;
     padding: 10px 14px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-top-color: rgba(255, 255, 255, 0.18);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.settings-row.clickable-modal-row:hover {
+    border-color: rgba(255, 148, 56, 0.75);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28),
+        0 0 12px rgba(255, 107, 0, 0.24);
 }
 
 .settings-row-title {
-    color: #2c3e50;
+    color: #eef2f8;
     font-size: 13px;
     font-weight: 600;
 }
 
 .settings-row-sub {
-    color: #7f8c8d;
+    color: rgba(235, 240, 248, 0.62);
     font-size: 11px;
 }
 
+/* Open With ListBox cleanup */
+list.modal-app-listbox,
+list.modal-app-listbox > row.modal-app-list-row {
+    background: transparent;
+    background-color: transparent;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    padding: 3px 0;
+}
+
+/* Properties Dialog Hero & Keys */
+.prop-hero-box {
+    background-image: linear-gradient(180deg,
+            rgba(68, 76, 94, 0.72) 0%,
+            rgba(46, 52, 66, 0.72) 100%);
+    border-radius: 16px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
 .prop-hero-name {
-    color: #1e272e;
+    color: #ffffff;
     font-size: 14px;
     font-weight: 700;
 }
 
 .prop-key-label {
-    color: #7f8c8d;
+    color: rgba(235, 240, 248, 0.62);
     font-size: 12px;
     font-weight: 600;
 }
 
 .prop-val-label {
-    color: #2c3e50;
+    color: #eef2f8;
     font-size: 12px;
     font-weight: 500;
 }
 
+/* Inset Dark Neomorphic Modal Entry */
 entry.modal-text-entry {
-    background-color: #ffffff;
-    color: #1e272e;
-    border: 1px solid rgba(0, 0, 0, 0.14);
+    background-color: #252a36;
+    background-image: linear-gradient(145deg, #1f2430 0%, #313849 100%);
+    color: #f3f5f8;
+    border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 12px;
     padding: 8px 12px;
     font-size: 13px;
     font-weight: 500;
+    box-shadow:
+        inset 2px 2px 5px rgba(10, 13, 20, 0.65),
+        inset -1px -1px 3px rgba(255, 255, 255, 0.10);
 }
 
 entry.modal-text-entry:focus-within {
-    border-color: #ff6b00;
-    box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.20);
+    background-color: #1f2430;
+    background-image: none;
+    color: #ffffff;
+    border: 1.5px solid #ff6b00;
+    box-shadow:
+        0 0 12px rgba(255, 118, 20, 0.42),
+        inset 1px 1px 3px rgba(0, 0, 0, 0.35);
 }
 
+/* Primary Orange Action Button */
 button.modal-primary-btn {
-    background-color: #ff6b00;
     color: #ffffff;
-    border: none;
+    border: 2px solid transparent;
     border-radius: 12px;
-    padding: 7px 18px;
+    padding: 6px 18px;
     font-size: 12px;
     font-weight: 700;
+    background-color: #ff6b00;
+    background-image:
+        linear-gradient(to bottom, #ff8524 0%, #e65800 100%),
+        linear-gradient(145deg, #ffd08a 0%, #ff730a 60%, #b83b00 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.35),
+        0 3px 10px rgba(255, 107, 0, 0.38);
+    transition: all 140ms ease;
 }
 
 button.modal-primary-btn:hover {
-    background-color: #ff7e1f;
+    background-image:
+        linear-gradient(to bottom, #ff963d 0%, #f56300 100%),
+        linear-gradient(145deg, #ffe0ad 0%, #ff841f 60%, #cc4400 100%);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.45),
+        0 0 14px rgba(255, 118, 20, 0.55);
 }
 
-button.modal-secondary-btn {
-    background-color: rgba(0, 0, 0, 0.06);
-    color: #1e272e;
-    border: none;
+/* Secondary Dark Neomorphic Button & Toggle */
+button.modal-secondary-btn,
+dropdown.modal-dropdown > button {
+    color: #e6ecf5;
+    border: 2px solid transparent;
     border-radius: 12px;
-    padding: 7px 16px;
+    padding: 6px 14px;
     font-size: 12px;
     font-weight: 600;
+    background-color: #3a4152;
+    background-image:
+        linear-gradient(to bottom, #4b5469 0%, #343b4b 100%),
+        linear-gradient(145deg, rgba(130, 144, 172, 0.55) 0%, rgba(32, 37, 48, 0.85) 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.22),
+        2px 3px 6px rgba(12, 15, 22, 0.48);
+    transition: all 140ms ease;
 }
 
-button.modal-secondary-btn:hover {
-    background-color: rgba(0, 0, 0, 0.11);
+button.modal-secondary-btn:hover,
+dropdown.modal-dropdown > button:hover {
+    color: #ffb857;
+    background-image:
+        linear-gradient(to bottom, #545f76 0%, #3b4355 100%),
+        linear-gradient(145deg, #ffc470 0%, #ff730a 55%, #e04b00 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.30),
+        0 0 12px rgba(255, 118, 20, 0.42);
 }
 
-/* --- Pointer Cursor for Interactive Controls --- 
-button.sidebar-btn,
-button.nav-btn,
-button.view-btn,
-button.win-ctrl-btn,
-button.breadcrumb-pill,
-button.file-card-btn,
-button.context-menu-btn,
-button.modal-primary-btn,
-button.modal-secondary-btn {
-    cursor: pointer;
-}*/
+/* Preferences Switch Styling */
+switch.modal-switch {
+    background-color: #252a36;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    min-width: 44px;
+    min-height: 24px;
+}
+
+switch.modal-switch:checked {
+    background-color: #ff6b00;
+    background-image: linear-gradient(to bottom, #ff8524 0%, #e05500 100%);
+    border-color: #ffb857;
+    box-shadow: 0 0 10px rgba(255, 118, 20, 0.45);
+}
+
+switch.modal-switch slider {
+    background-color: #eef2f8;
+    border-radius: 999px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.40);
+}
 
 .breadcrumb-fade-left {
     border-radius: 10px;
-    background-image: linear-gradient(
-        to right,
-        rgba(232, 240, 250, 0.92) 0%,
-        rgba(232, 240, 250, 0.72) 35%,
-        rgba(232, 240, 250, 0.28) 70%,
-        rgba(232, 240, 250, 0.00) 100%
-    );
+    background-image: linear-gradient(to right,
+            rgba(66, 73, 88, 0.94) 0%,
+            rgba(66, 73, 88, 0.72) 35%,
+            rgba(66, 73, 88, 0.28) 70%,
+            rgba(66, 73, 88, 0.00) 100%);
 }
 
 .breadcrumb-fade-right {
     border-radius: 10px;
-    background-image: linear-gradient(
-        to left,
-        rgba(232, 240, 250, 0.92) 0%,
-        rgba(232, 240, 250, 0.72) 35%,
-        rgba(232, 240, 250, 0.28) 70%,
-        rgba(232, 240, 250, 0.00) 100%
-    );
+    background-image: linear-gradient(to left,
+            rgba(66, 73, 88, 0.94) 0%,
+            rgba(66, 73, 88, 0.72) 35%,
+            rgba(66, 73, 88, 0.28) 70%,
+            rgba(66, 73, 88, 0.00) 100%);
 }
 
-/* Joined Left/Right Arrows & Joined Icon/List View Toggle */
-.joined-btn-group > button:first-child,
-.joined-btn-group > button:first-child:hover,
-.joined-btn-group > button:first-child:disabled {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+/* --- Joined Left/Right Navigation Capsule (Single Unified Capsule, Zero Step) --- */
+.joined-btn-group {
+    border: 2px solid transparent;
+    border-radius: 11px;
+    background-color: #3a4152;
+    background-image:
+        linear-gradient(to bottom, #4b5469 0%, #343b4b 100%),
+        linear-gradient(145deg, rgba(130, 144, 172, 0.55) 0%, rgba(32, 37, 48, 0.85) 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.24),
+        inset 0 -1px 1px rgba(18, 22, 30, 0.55),
+        -2px -2px 4px rgba(255, 255, 255, 0.08),
+        2px 3px 6px rgba(12, 15, 22, 0.52);
 }
 
-.joined-btn-group > button:last-child,
-.joined-btn-group > button:last-child:hover,
-.joined-btn-group > button:last-child:disabled {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    margin-left: -1px;
+.joined-btn-group > button.nav-btn,
+.joined-btn-group > button.nav-btn:disabled {
+    border: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    background-image: none;
+    box-shadow: none;
+    min-height: 26px;
+    min-width: 30px;
+    padding: 0;
+}
+
+.joined-btn-group > button.nav-btn:disabled {
+    color: rgba(230, 236, 245, 0.32);
+}
+
+.joined-btn-group > button.nav-btn:first-child {
+    border-top-left-radius: 9px;
+    border-bottom-left-radius: 9px;
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.14);
+}
+
+.joined-btn-group > button.nav-btn:last-child {
+    border-top-right-radius: 9px;
+    border-bottom-right-radius: 9px;
+    margin-left: 0;
+}
+
+.joined-btn-group > button.nav-btn:hover {
+    color: #ffb857;
+    border: 2px solid transparent;
+    background-image:
+        linear-gradient(to bottom, #52443a 0%, #3a312c 100%),
+        linear-gradient(145deg, #ffc470 0%, #ff730a 55%, #d94b00 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.30),
+        2px 3px 8px rgba(255, 107, 0, 0.36),
+        0 0 15px rgba(255, 118, 20, 0.50);
+}
+
+.joined-btn-group > button.nav-btn:active {
+    border: 2px solid transparent;
+    background-image:
+        linear-gradient(to bottom, #2c3240 0%, #3d4557 100%),
+        linear-gradient(145deg, #d94600 0%, #ff7b1c 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow: inset 1px 2px 3px rgba(14, 17, 24, 0.65);
+}
+
+/* --- Joined Icon/List View Toggle (Always-Glowing Active Orange Rim) --- */
+.joined-btn-group > button.view-btn {
+    border: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    background-image: none;
+    box-shadow: none;
+    min-height: 26px;
+    min-width: 30px;
+    padding: 0;
+}
+
+.joined-btn-group > button.view-btn:first-child {
+    border-top-left-radius: 9px;
+    border-bottom-left-radius: 9px;
+}
+
+.joined-btn-group > button.view-btn:last-child {
+    border-top-right-radius: 9px;
+    border-bottom-right-radius: 9px;
+}
+
+.joined-btn-group > button.view-btn:hover {
+    color: #ffb857;
+    border: 2px solid transparent;
+    background-image:
+        linear-gradient(to bottom, #545f76 0%, #3b4355 100%),
+        linear-gradient(145deg, #ffc470 0%, #ff730a 55%, #e04b00 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.32),
+        0 0 14px rgba(255, 118, 20, 0.48);
+}
+
+.joined-btn-group > button.view-btn.active,
+.joined-btn-group > button.view-btn.active:hover {
+    color: #ffb857;
+    border: 2px solid transparent;
+    background-image:
+        linear-gradient(to bottom, #52443a 0%, #3a312c 100%),
+        linear-gradient(145deg, #ffc470 0%, #ff730a 55%, #d94b00 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.30),
+        0 0 16px rgba(255, 118, 20, 0.62);
 }
 
 /* Keep content scrollbar inside the superellipse border & away from resize edge */
 .content-controls scrolledwindow {
-    margin-right: 16px;
+    margin-right: 0;
 }
 
 .content-controls scrolledwindow scrollbar.vertical slider {
-    background-color: rgba(120, 142, 174, 0.35);
+    background-color: rgba(255, 255, 255, 0.22);
     border-radius: 999px;
     min-width: 5px;
 }
 
 .content-controls scrolledwindow scrollbar.vertical slider:hover {
-    background-color: rgba(255, 107, 0, 0.65);
+    background-color: rgba(255, 107, 0, 0.72);
 }
 
-css
 button.sidebar-btn,
 button.sidebar-btn:focus,
 button.sidebar-btn:focus-visible,
@@ -722,46 +935,40 @@ window.desktop-mode-window,
 
 /* Frosted Glass Cards for Desktop Mode Icons (Matching Blurred Launcher) */
 button.file-card-btn.desktop-file-card {
-    background-image: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.22) 0%,
-        rgba(255, 255, 255, 0.11) 100%
-    );
+    background-image: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.22) 0%,
+            rgba(255, 255, 255, 0.11) 100%);
     border: 1px solid rgba(255, 255, 255, 0.26);
     border-top-color: rgba(255, 255, 255, 0.42);
     border-radius: 20px;
     padding: 10px 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18),
-                inset 0 1px 0 rgba(255, 255, 255, 0.28);
+        inset 0 1px 0 rgba(255, 255, 255, 0.28);
     transition: transform 150ms cubic-bezier(0.2, 0.9, 0.3, 1.0),
-                background-image 150ms ease,
-                border-color 150ms ease,
-                box-shadow 150ms ease;
+        background-image 150ms ease,
+        border-color 150ms ease,
+        box-shadow 150ms ease;
 }
 
 button.file-card-btn.desktop-file-card:hover {
     transform: translateY(-3px) scale(1.03);
-    background-image: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.36) 0%,
-        rgba(255, 255, 255, 0.20) 100%
-    );
+    background-image: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.36) 0%,
+            rgba(255, 255, 255, 0.20) 100%);
     border-color: rgba(255, 168, 82, 0.78);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26),
-                0 0 12px rgba(255, 138, 43, 0.28),
-                inset 0 1px 0 rgba(255, 255, 255, 0.48);
+        0 0 12px rgba(255, 138, 43, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.48);
 }
 
 button.file-card-btn.desktop-file-card.selected {
-    background-image: linear-gradient(
-        180deg,
-        rgba(255, 168, 82, 0.34) 0%,
-        rgba(255, 138, 43, 0.18) 100%
-    );
+    background-image: linear-gradient(180deg,
+            rgba(255, 168, 82, 0.34) 0%,
+            rgba(255, 138, 43, 0.18) 100%);
     border-color: rgba(255, 138, 43, 0.92);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24),
-                0 0 14px rgba(255, 138, 43, 0.38),
-                inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        0 0 14px rgba(255, 138, 43, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 label.desktop-file-label {
@@ -779,4 +986,3 @@ button.file-card-btn.desktop-file-card.selected .file-card {
     border: none;
     box-shadow: none;
 }
-
