@@ -744,6 +744,117 @@ gboolean on_window_key_pressed(GtkEventControllerKey *controller,
     }
     return FALSE;
 }
+/* --- Alpha-Mask Container for Smooth Top & Bottom Scroll Edge Fading --- */
+typedef struct
+{
+    GtkWidget parent_instance;
+    gboolean fade_top;
+    gboolean fade_bottom;
+} FilesFadeBox;
+
+typedef struct
+{
+    GtkWidgetClass parent_class;
+} FilesFadeBoxClass;
+
+G_DEFINE_TYPE(FilesFadeBox, files_fade_box, GTK_TYPE_WIDGET)
+
+static void files_fade_box_snapshot(GtkWidget *widget, GtkSnapshot *snapshot)
+{
+    FilesFadeBox *self = (FilesFadeBox *)widget;
+    GtkWidget *child = gtk_widget_get_first_child(widget);
+    if (!child)
+        return;
+
+    int w = gtk_widget_get_width(widget);
+    int h = gtk_widget_get_height(widget);
+
+    if ((!self->fade_top && !self->fade_bottom) || w <= 0 || h <= 60)
+    {
+        gtk_widget_snapshot_child(widget, child, snapshot);
+        return;
+    }
+
+    const float fade_px = 28.0f;
+    graphene_rect_t bounds = GRAPHENE_RECT_INIT(0.0f, 0.0f, (float)w, (float)h);
+
+    gtk_snapshot_push_mask(snapshot, GSK_MASK_MODE_ALPHA);
+
+    GskColorStop stops[4];
+    int n_stops = 0;
+
+    if (self->fade_top)
+    {
+        stops[n_stops++] = (GskColorStop){0.0f, {1.0f, 1.0f, 1.0f, 0.0f}};
+        stops[n_stops++] = (GskColorStop){MIN(0.45f, fade_px / (float)h), {1.0f, 1.0f, 1.0f, 1.0f}};
+    }
+    else
+    {
+        stops[n_stops++] = (GskColorStop){0.0f, {1.0f, 1.0f, 1.0f, 1.0f}};
+    }
+
+    if (self->fade_bottom)
+    {
+        stops[n_stops++] = (GskColorStop){MAX(0.55f, 1.0f - (fade_px / (float)h)), {1.0f, 1.0f, 1.0f, 1.0f}};
+        stops[n_stops++] = (GskColorStop){1.0f, {1.0f, 1.0f, 1.0f, 0.0f}};
+    }
+    else
+    {
+        stops[n_stops++] = (GskColorStop){1.0f, {1.0f, 1.0f, 1.0f, 1.0f}};
+    }
+
+    gtk_snapshot_append_linear_gradient(snapshot,
+                                        &bounds,
+                                        &GRAPHENE_POINT_INIT(0.0f, 0.0f),
+                                        &GRAPHENE_POINT_INIT(0.0f, (float)h),
+                                        stops,
+                                        n_stops);
+    gtk_snapshot_pop(snapshot);
+
+    gtk_widget_snapshot_child(widget, child, snapshot);
+    gtk_snapshot_pop(snapshot);
+}
+
+static void files_fade_box_dispose(GObject *object)
+{
+    GtkWidget *child = gtk_widget_get_first_child(GTK_WIDGET(object));
+    if (child)
+        gtk_widget_unparent(child);
+    G_OBJECT_CLASS(files_fade_box_parent_class)->dispose(object);
+}
+
+static void files_fade_box_class_init(FilesFadeBoxClass *klass)
+{
+    G_OBJECT_CLASS(klass)->dispose = files_fade_box_dispose;
+    GtkWidgetClass *wclass = GTK_WIDGET_CLASS(klass);
+    wclass->snapshot = files_fade_box_snapshot;
+    gtk_widget_class_set_layout_manager_type(wclass, GTK_TYPE_BIN_LAYOUT);
+}
+
+static void files_fade_box_init(FilesFadeBox *self)
+{
+    self->fade_top = FALSE;
+    self->fade_bottom = FALSE;
+}
+
+static void on_files_vadj_updated(GtkAdjustment *vadj, gpointer user_data)
+{
+    FilesFadeBox *self = (FilesFadeBox *)user_data;
+    if (!GTK_IS_WIDGET(self))
+        return;
+    double val = gtk_adjustment_get_value(vadj);
+    double page = gtk_adjustment_get_page_size(vadj);
+    double upper = gtk_adjustment_get_upper(vadj);
+    gboolean want_top = (val > 1.0);
+    gboolean want_bot = ((val + page) < (upper - 1.0));
+    if (self->fade_top != want_top || self->fade_bottom != want_bot)
+    {
+        self->fade_top = want_top;
+        self->fade_bottom = want_bot;
+        gtk_widget_queue_draw(GTK_WIDGET(self));
+    }
+}
+
 /* --- Shared File Grid & Marquee Overlay Builder --- */
 GtkWidget *build_file_grid_overlay(AppState *state)
 {
@@ -767,7 +878,24 @@ GtkWidget *build_file_grid_overlay(AppState *state)
     gtk_flow_box_set_selection_mode(GTK_FLOW_BOX(flowbox), GTK_SELECTION_NONE);
     state->flowbox = flowbox;
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled), flowbox);
-    gtk_overlay_set_child(GTK_OVERLAY(grid_overlay), scrolled);
+    if (!state->is_desktop_mode)
+    {
+        GtkWidget *fade_box = g_object_new(files_fade_box_get_type(), NULL);
+        gtk_widget_set_vexpand(fade_box, TRUE);
+        gtk_widget_set_parent(scrolled, fade_box);
+        GtkAdjustment *vadj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scrolled));
+        if (vadj)
+        {
+            g_signal_connect(vadj, "value-changed", G_CALLBACK(on_files_vadj_updated), fade_box);
+            g_signal_connect(vadj, "changed", G_CALLBACK(on_files_vadj_updated), fade_box);
+            on_files_vadj_updated(vadj, fade_box);
+        }
+        gtk_overlay_set_child(GTK_OVERLAY(grid_overlay), fade_box);
+    }
+    else
+    {
+        gtk_overlay_set_child(GTK_OVERLAY(grid_overlay), scrolled);
+    }
     GtkWidget *selection_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_add_css_class(selection_box, "selection-marquee");
     gtk_widget_set_halign(selection_box, GTK_ALIGN_START);

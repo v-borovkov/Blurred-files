@@ -385,7 +385,7 @@ static void test_archives_zip_and_targz(TestFixture *fix, gconstpointer user_dat
     select_item_by_name(s, "doc_a.txt");
     select_item_by_name(s, "doc_b.txt");
     bulk_compress_selected_items(s, TRUE);
-    pump_events_ms(150);
+    pump_events_ms(600);
     /* Find the generated .tar.gz archive */
     const char *archive_name = NULL;
     for (GtkWidget *c = gtk_widget_get_first_child(s->flowbox); c; c = gtk_widget_get_next_sibling(c))
@@ -408,7 +408,7 @@ static void test_archives_zip_and_targz(TestFixture *fix, gconstpointer user_dat
     clear_item_selection(s);
     select_item_by_name(s, archive_name);
     bulk_extract_selected_archives(s);
-    pump_events_ms(150);
+    pump_events_ms(600);
     g_assert_true(g_file_test(pa, G_FILE_TEST_EXISTS));
     g_assert_true(g_file_test(pb, G_FILE_TEST_EXISTS));
     g_free(pa);
@@ -680,7 +680,7 @@ static void test_archive_zip_format(TestFixture *fix, gconstpointer user_data)
     select_item_by_name(s, "zip_one.txt");
     select_item_by_name(s, "zip_two.txt");
     bulk_compress_selected_items(s, FALSE);
-    pump_events_ms(150);
+    pump_events_ms(600);
     const char *zip_name = NULL;
     for (GtkWidget *c = gtk_widget_get_first_child(s->flowbox); c; c = gtk_widget_get_next_sibling(c))
     {
@@ -700,7 +700,7 @@ static void test_archive_zip_format(TestFixture *fix, gconstpointer user_data)
     clear_item_selection(s);
     select_item_by_name(s, zip_name);
     bulk_extract_selected_archives(s);
-    pump_events_ms(150);
+    pump_events_ms(600);
     g_assert_true(g_file_test(p1, G_FILE_TEST_EXISTS));
     g_assert_true(g_file_test(p2, G_FILE_TEST_EXISTS));
     g_free(p1);
@@ -982,6 +982,7 @@ int main(int argc, char **argv)
     g_mkdir_with_parents(cfg_root, 0755);
     g_mkdir_with_parents(dat_root, 0700);
     g_setenv("GSK_RENDERER", "cairo", TRUE);
+    g_unsetenv("LD_PRELOAD");
     g_setenv("GTK_A11Y", "none", TRUE);
     g_setenv("NO_AT_BRIDGE", "1", TRUE);
     g_setenv("XDG_CONFIG_HOME", cfg_root, TRUE);

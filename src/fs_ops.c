@@ -830,6 +830,7 @@ void bulk_compress_selected_items(AppState *state, gboolean use_tar_gz)
     if (use_tar_gz)
     {
         g_ptr_array_add(argv, g_strdup("tar"));
+        g_ptr_array_add(argv, g_strdup("--warning=no-file-changed"));
         g_ptr_array_add(argv, g_strdup("-czf"));
         g_ptr_array_add(argv, g_strdup_printf("./%s", final_archive_base));
         for (GList *l = paths; l != NULL; l = l->next)
@@ -853,6 +854,7 @@ void bulk_compress_selected_items(AppState *state, gboolean use_tar_gz)
     }
     g_ptr_array_add(argv, NULL);
     GSubprocessLauncher *launcher = g_subprocess_launcher_new(G_SUBPROCESS_FLAGS_NONE);
+    g_subprocess_launcher_unsetenv(launcher, "LD_PRELOAD");
     g_subprocess_launcher_set_cwd(launcher, state->current_path);
     GError *err = NULL;
     GSubprocess *proc = g_subprocess_launcher_spawnv(launcher, (const char *const *)argv->pdata, &err);
@@ -910,7 +912,8 @@ void bulk_extract_selected_archives(AppState *state)
         }
         g_ptr_array_add(argv, NULL);
         GSubprocessLauncher *launcher = g_subprocess_launcher_new(G_SUBPROCESS_FLAGS_NONE);
-        g_subprocess_launcher_set_cwd(launcher, state->current_path);
+        g_subprocess_launcher_unsetenv(launcher, "LD_PRELOAD");
+    g_subprocess_launcher_set_cwd(launcher, state->current_path);
         GError *err = NULL;
         GSubprocess *proc = g_subprocess_launcher_spawnv(launcher, (const char *const *)argv->pdata, &err);
         if (proc)

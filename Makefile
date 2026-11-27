@@ -38,7 +38,7 @@ sanitize: STRIP = true
 sanitize: clean $(TARGET) $(BUILD_DIR)/test_runner
 
 $(BUILD_DIR)/test_runner: tests/test_main.c $(TEST_OBJS) | $(BUILD_DIR)
-	$(CC) $(CFLAGS) $(ASAN_FLAGS) $^ -o $@ $(LDFLAGS) $(ASAN_FLAGS)
+	$(CC) -Wl,--no-as-needed -lasan -Wl,--as-needed $(ASAN_FLAGS) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 test: $(BUILD_DIR)/test_runner
 	@if command -v xvfb-run >/dev/null 2>&1; then \
