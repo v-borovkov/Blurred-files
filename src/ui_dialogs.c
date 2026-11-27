@@ -226,7 +226,7 @@ void show_rename_dialog(AppState *state, const char *old_path, const char *curre
     GtkWidget *dialog = gtk_window_new();
     gtk_window_set_title(GTK_WINDOW(dialog), "Rename");
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(state->window));
-    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_window_set_modal(GTK_WINDOW(dialog), FALSE);
     gtk_window_set_decorated(GTK_WINDOW(dialog), FALSE);
     gtk_window_set_default_size(GTK_WINDOW(dialog), 390, 215);
     gtk_widget_add_css_class(dialog, "settings-modal-window");
@@ -403,7 +403,7 @@ void show_create_item_dialog(AppState *state, gboolean is_folder)
     GtkWidget *dialog = gtk_window_new();
     gtk_window_set_title(GTK_WINDOW(dialog), is_folder ? "New Folder" : "New File");
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(state->window));
-    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_window_set_modal(GTK_WINDOW(dialog), FALSE);
     gtk_window_set_decorated(GTK_WINDOW(dialog), FALSE);
     gtk_window_set_default_size(GTK_WINDOW(dialog), 390, 215);
     gtk_widget_add_css_class(dialog, "settings-modal-window");
@@ -534,7 +534,7 @@ void show_open_with_dialog(AppState *state, const char *file_path)
     GtkWidget *dialog = gtk_window_new();
     gtk_window_set_title(GTK_WINDOW(dialog), "Open With");
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(state->window));
-    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_window_set_modal(GTK_WINDOW(dialog), FALSE);
     gtk_window_set_decorated(GTK_WINDOW(dialog), FALSE);
     gtk_window_set_default_size(GTK_WINDOW(dialog), 390, 430);
     gtk_widget_add_css_class(dialog, "settings-modal-window");
@@ -1010,7 +1010,7 @@ void show_properties_dialog(AppState *state, const char *path)
     GtkWidget *dialog = gtk_window_new();
     gtk_window_set_title(GTK_WINDOW(dialog), "Properties");
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(state->window));
-    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_window_set_modal(GTK_WINDOW(dialog), FALSE);
     gtk_window_set_decorated(GTK_WINDOW(dialog), FALSE);
     gtk_window_set_default_size(GTK_WINDOW(dialog), 430, 415);
     gtk_widget_add_css_class(dialog, "settings-modal-window");
@@ -1242,7 +1242,7 @@ void show_settings_dialog(AppState *state)
     GtkWidget *dialog = gtk_window_new();
     gtk_window_set_title(GTK_WINDOW(dialog), "Preferences");
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(state->window));
-    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_window_set_modal(GTK_WINDOW(dialog), FALSE);
     gtk_window_set_decorated(GTK_WINDOW(dialog), FALSE);
     gtk_window_set_default_size(GTK_WINDOW(dialog), 560, 410);
     gtk_widget_add_css_class(dialog, "settings-modal-window");
