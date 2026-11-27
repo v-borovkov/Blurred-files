@@ -997,3 +997,372 @@ button.file-card-btn.desktop-file-card.selected .file-card {
     border: none;
     box-shadow: none;
 }
+/* === Dynamic Suite Theme Overrides (Live-Synced via blurred_theme.c) === */
+@define-color accent_start #FFB857;
+@define-color accent_mid #FF6B00;
+@define-color accent_end #D14000;
+@define-color accent_glow rgba(255, 107, 0, 0.45);
+@define-color accent_tint_soft rgba(255, 107, 0, 0.18);
+@define-color accent_tint_strong rgba(255, 107, 0, 0.28);
+
+.sidebar-brand,
+.settings-header-icon {
+    color: @accent_mid;
+    -gtk-icon-shadow: 0 0 8px @accent_glow;
+}
+
+button.sidebar-btn:hover,
+button.sidebar-btn:hover image,
+button.sidebar-btn:hover label {
+    color: @accent_start;
+    border-color: @accent_mid;
+}
+
+button.sidebar-btn.active,
+button.sidebar-btn.active image,
+button.sidebar-btn.active label {
+    color: @accent_mid;
+    border-color: @accent_mid;
+    background-image: linear-gradient(to bottom, @accent_tint_strong 0%, @accent_tint_soft 100%);
+}
+
+button.sidebar-btn.drop-target-hover {
+    background-color: @accent_tint_strong;
+    border-color: @accent_mid;
+}
+
+button.nav-btn:hover,
+button.view-btn:hover,
+button.breadcrumb-pill:hover,
+button.view-btn.active,
+button.breadcrumb-pill.active,
+.joined-btn-group > button.nav-btn:hover,
+.joined-btn-group > button.view-btn:hover,
+.joined-btn-group > button.view-btn.active,
+.joined-btn-group > button.view-btn.active:hover {
+    color: @accent_start;
+    background-image:
+        linear-gradient(to bottom, #4b5469 0%, #343b4b 100%),
+        linear-gradient(145deg, @accent_start 0%, @accent_mid 55%, @accent_end 100%);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.30),
+        0 0 14px @accent_glow;
+}
+
+entry.header-search:focus-within,
+entry.modal-text-entry:focus-within {
+    border-color: @accent_mid;
+    box-shadow: 0 0 12px @accent_glow;
+}
+
+.file-card-btn:hover .file-card,
+.file-card-btn:hover .file-list-row,
+.settings-row.clickable-modal-row:hover {
+    border-color: @accent_mid;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28), 0 0 14px @accent_glow;
+}
+
+.file-card-btn.selected .file-card,
+.file-card-btn.selected .file-list-row {
+    background-image: linear-gradient(180deg, @accent_tint_strong 0%, @accent_tint_soft 100%);
+    border-color: @accent_mid;
+}
+
+button.file-card-btn.selected .file-label,
+button.file-card-btn.selected .file-list-label,
+.context-menu-btn:hover,
+.list-col-btn:hover {
+    color: @accent_start;
+}
+
+.selection-marquee {
+    background-color: @accent_tint_soft;
+    border-color: @accent_mid;
+}
+
+button.modal-primary-btn,
+switch.modal-switch:checked {
+    background-color: @accent_mid;
+    background-image: linear-gradient(135deg, @accent_start 0%, @accent_mid 55%, @accent_end 100%);
+    box-shadow: 0 0 12px @accent_glow;
+}
+
+.content-controls scrolledwindow scrollbar.vertical slider:hover,
+.list-col-resizer:hover .list-col-resizer-bar,
+.list-col-resizer:active .list-col-resizer-bar {
+    background-color: @accent_mid;
+}
+
+/* === Frosted Alabaster Light Appearance === */
+window.theme-light button.sidebar-btn {
+    color: rgba(24, 28, 36, 0.85);
+}
+
+window.theme-light .slash-label,
+window.theme-light .breadcrumb-sep,
+window.theme-light .list-col-btn,
+window.theme-light .status-bar-label,
+window.theme-light .settings-row-sub,
+window.theme-light .prop-key-label,
+window.theme-light .file-list-col-type,
+window.theme-light .file-list-col-date,
+window.theme-light .file-list-col-size {
+    color: rgba(24, 28, 36, 0.68);
+}
+
+window.theme-light .file-label,
+window.theme-light .file-list-label,
+window.theme-light .settings-modal-title,
+window.theme-light .settings-row-title,
+window.theme-light .prop-val-label,
+window.theme-light .prop-hero-name {
+    color: #181C24;
+    text-shadow: none;
+}
+
+window.theme-light button.nav-btn,
+window.theme-light button.view-btn,
+window.theme-light button.breadcrumb-pill,
+window.theme-light button.win-ctrl-btn,
+window.theme-light button.modal-secondary-btn,
+window.theme-light dropdown.modal-dropdown > button,
+window.theme-light .joined-btn-group {
+    color: #181C24;
+    background-color: #E6ECF5;
+    background-image:
+        linear-gradient(to bottom, #FFFFFF 0%, #E2E8F2 100%),
+        linear-gradient(145deg, rgba(160, 174, 198, 0.65) 0%, rgba(120, 134, 158, 0.55) 100%);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.95),
+        2px 3px 6px rgba(15, 23, 42, 0.12);
+}
+
+window.theme-light button.nav-btn:hover,
+window.theme-light button.view-btn:hover,
+window.theme-light button.breadcrumb-pill:hover,
+window.theme-light button.view-btn.active,
+window.theme-light button.breadcrumb-pill.active,
+window.theme-light .joined-btn-group > button.nav-btn:hover,
+window.theme-light .joined-btn-group > button.view-btn:hover,
+window.theme-light .joined-btn-group > button.view-btn.active {
+    color: @accent_end;
+    background-image:
+        linear-gradient(to bottom, #FFFFFF 0%, #EDF2FA 100%),
+        linear-gradient(145deg, @accent_start 0%, @accent_mid 55%, @accent_end 100%);
+}
+
+window.theme-light entry.header-search,
+window.theme-light entry.modal-text-entry {
+    background-color: #FFFFFF;
+    background-image: none;
+    color: #181C24;
+    border-color: rgba(24, 28, 36, 0.18);
+    box-shadow: inset 1px 2px 4px rgba(15, 23, 42, 0.08);
+}
+
+window.theme-light entry.modal-text-entry text {
+    color: #181C24;
+}
+
+window.theme-light .file-card,
+window.theme-light .file-list-row,
+window.theme-light .settings-row,
+window.theme-light .prop-hero-box {
+    background-color: rgba(255, 255, 255, 0.88);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 244, 250, 0.92) 100%);
+    border-color: rgba(24, 28, 36, 0.12);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+window.theme-light .file-card-btn:hover .file-card,
+window.theme-light .file-card-btn:hover .file-list-row {
+    background-image: linear-gradient(180deg, #FFFFFF 0%, #F4F7FC 100%);
+    border-color: @accent_mid;
+}
+
+/* === Dynamic Suite Theme Overrides (Live-Synced via blurred_theme.c) === */
+@define-color accent_start #FFB857;
+@define-color accent_mid #FF6B00;
+@define-color accent_end #D14000;
+@define-color accent_glow rgba(255, 107, 0, 0.45);
+@define-color accent_tint_soft rgba(255, 107, 0, 0.18);
+@define-color accent_tint_strong rgba(255, 107, 0, 0.28);
+
+.sidebar-brand,
+.settings-header-icon {
+    color: @accent_mid;
+    -gtk-icon-shadow: 0 0 8px @accent_glow;
+}
+
+button.sidebar-btn:hover,
+button.sidebar-btn:hover image,
+button.sidebar-btn:hover label {
+    color: @accent_start;
+    border-color: @accent_mid;
+}
+
+button.sidebar-btn.active,
+button.sidebar-btn.active image,
+button.sidebar-btn.active label {
+    color: @accent_mid;
+    border-color: @accent_mid;
+    background-image: linear-gradient(to bottom, @accent_tint_strong 0%, @accent_tint_soft 100%);
+}
+
+button.sidebar-btn.drop-target-hover {
+    background-color: @accent_tint_strong;
+    border-color: @accent_mid;
+}
+
+button.nav-btn:hover,
+button.view-btn:hover,
+button.breadcrumb-pill:hover,
+button.view-btn.active,
+button.breadcrumb-pill.active,
+.joined-btn-group > button.nav-btn:hover,
+.joined-btn-group > button.view-btn:hover,
+.joined-btn-group > button.view-btn.active,
+.joined-btn-group > button.view-btn.active:hover {
+    color: @accent_start;
+    background-image:
+        linear-gradient(to bottom, #4b5469 0%, #343b4b 100%),
+        linear-gradient(145deg, @accent_start 0%, @accent_mid 55%, @accent_end 100%);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.30),
+        0 0 14px @accent_glow;
+}
+
+entry.header-search:focus-within,
+entry.modal-text-entry:focus-within {
+    border-color: @accent_mid;
+    box-shadow: 0 0 12px @accent_glow;
+}
+
+.file-card-btn:hover .file-card,
+.file-card-btn:hover .file-list-row,
+.settings-row.clickable-modal-row:hover {
+    border-color: @accent_mid;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28), 0 0 14px @accent_glow;
+}
+
+.file-card-btn.selected .file-card,
+.file-card-btn.selected .file-list-row {
+    background-image: linear-gradient(180deg, @accent_tint_strong 0%, @accent_tint_soft 100%);
+    border-color: @accent_mid;
+}
+
+button.file-card-btn.selected .file-label,
+button.file-card-btn.selected .file-list-label,
+.context-menu-btn:hover,
+.list-col-btn:hover {
+    color: @accent_start;
+}
+
+.selection-marquee {
+    background-color: @accent_tint_soft;
+    border-color: @accent_mid;
+}
+
+button.modal-primary-btn,
+switch.modal-switch:checked {
+    background-color: @accent_mid;
+    background-image: linear-gradient(135deg, @accent_start 0%, @accent_mid 55%, @accent_end 100%);
+    box-shadow: 0 0 12px @accent_glow;
+}
+
+.content-controls scrolledwindow scrollbar.vertical slider:hover,
+.list-col-resizer:hover .list-col-resizer-bar,
+.list-col-resizer:active .list-col-resizer-bar {
+    background-color: @accent_mid;
+}
+
+/* === Frosted Alabaster Light Appearance === */
+window.theme-light button.sidebar-btn {
+    color: rgba(24, 28, 36, 0.85);
+}
+
+window.theme-light .slash-label,
+window.theme-light .breadcrumb-sep,
+window.theme-light .list-col-btn,
+window.theme-light .status-bar-label,
+window.theme-light .settings-row-sub,
+window.theme-light .prop-key-label,
+window.theme-light .file-list-col-type,
+window.theme-light .file-list-col-date,
+window.theme-light .file-list-col-size {
+    color: rgba(24, 28, 36, 0.68);
+}
+
+window.theme-light .file-label,
+window.theme-light .file-list-label,
+window.theme-light .settings-modal-title,
+window.theme-light .settings-row-title,
+window.theme-light .prop-val-label,
+window.theme-light .prop-hero-name {
+    color: #181C24;
+    text-shadow: none;
+}
+
+window.theme-light button.nav-btn,
+window.theme-light button.view-btn,
+window.theme-light button.breadcrumb-pill,
+window.theme-light button.win-ctrl-btn,
+window.theme-light button.modal-secondary-btn,
+window.theme-light dropdown.modal-dropdown > button,
+window.theme-light .joined-btn-group {
+    color: #181C24;
+    background-color: #E6ECF5;
+    background-image:
+        linear-gradient(to bottom, #FFFFFF 0%, #E2E8F2 100%),
+        linear-gradient(145deg, rgba(160, 174, 198, 0.65) 0%, rgba(120, 134, 158, 0.55) 100%);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.95),
+        2px 3px 6px rgba(15, 23, 42, 0.12);
+}
+
+window.theme-light button.nav-btn:hover,
+window.theme-light button.view-btn:hover,
+window.theme-light button.breadcrumb-pill:hover,
+window.theme-light button.view-btn.active,
+window.theme-light button.breadcrumb-pill.active,
+window.theme-light .joined-btn-group > button.nav-btn:hover,
+window.theme-light .joined-btn-group > button.view-btn:hover,
+window.theme-light .joined-btn-group > button.view-btn.active {
+    color: @accent_end;
+    background-image:
+        linear-gradient(to bottom, #FFFFFF 0%, #EDF2FA 100%),
+        linear-gradient(145deg, @accent_start 0%, @accent_mid 55%, @accent_end 100%);
+}
+
+window.theme-light entry.header-search,
+window.theme-light entry.modal-text-entry {
+    background-color: #FFFFFF;
+    background-image: none;
+    color: #181C24;
+    border-color: rgba(24, 28, 36, 0.18);
+    box-shadow: inset 1px 2px 4px rgba(15, 23, 42, 0.08);
+}
+
+window.theme-light entry.modal-text-entry text {
+    color: #181C24;
+}
+
+window.theme-light .file-card,
+window.theme-light .file-list-row,
+window.theme-light .settings-row,
+window.theme-light .prop-hero-box {
+    background-color: rgba(255, 255, 255, 0.88);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 244, 250, 0.92) 100%);
+    border-color: rgba(24, 28, 36, 0.12);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+window.theme-light .file-card-btn:hover .file-card,
+window.theme-light .file-card-btn:hover .file-list-row {
+    background-image: linear-gradient(180deg, #FFFFFF 0%, #F4F7FC 100%);
+    border-color: @accent_mid;
+}
+
+window.desktop-icons-hidden .desktop-files-grid {
+    opacity: 0;
+}

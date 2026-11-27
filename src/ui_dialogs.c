@@ -25,6 +25,7 @@ void save_app_settings(AppState *state)
     g_key_file_set_boolean(kf, "General", "show_hidden", state->show_hidden);
     g_key_file_set_boolean(kf, "General", "enable_thumbnails", state->enable_thumbnails);
     g_key_file_set_boolean(kf, "General", "double_click_open", state->double_click_open);
+    g_key_file_set_boolean(kf, "General", "hide_desktop_icons", state->hide_desktop_icons);
     g_key_file_set_integer(kf, "General", "grid_cols", state->grid_cols);
     g_key_file_set_integer(kf, "General", "sort_column", (int)state->sort_column);
     g_key_file_set_boolean(kf, "General", "sort_ascending", state->sort_ascending);
@@ -76,6 +77,10 @@ void load_app_settings(AppState *state)
         if (g_key_file_has_key(kf, "General", "double_click_open", NULL))
         {
             state->double_click_open = g_key_file_get_boolean(kf, "General", "double_click_open", NULL);
+        }
+        if (g_key_file_has_key(kf, "General", "hide_desktop_icons", NULL))
+        {
+            state->hide_desktop_icons = g_key_file_get_boolean(kf, "General", "hide_desktop_icons", NULL);
         }
         if (g_key_file_has_key(kf, "General", "grid_cols", NULL))
         {
@@ -238,6 +243,7 @@ void show_rename_dialog(AppState *state, const char *old_path, const char *curre
     GtkWidget *overlay = gtk_overlay_new();
     GtkWidget *bg_canvas = gtk_drawing_area_new();
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(bg_canvas), on_draw_modal_squircle, NULL, NULL);
+    blurred_theme_register_canvas(bg_canvas);
     gtk_overlay_set_child(GTK_OVERLAY(overlay), bg_canvas);
 
     GtkWidget *card = gtk_box_new(GTK_ORIENTATION_VERTICAL, 14);
@@ -411,6 +417,7 @@ void show_create_item_dialog(AppState *state, gboolean is_folder)
     GtkWidget *overlay = gtk_overlay_new();
     GtkWidget *bg_canvas = gtk_drawing_area_new();
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(bg_canvas), on_draw_modal_squircle, NULL, NULL);
+    blurred_theme_register_canvas(bg_canvas);
     gtk_overlay_set_child(GTK_OVERLAY(overlay), bg_canvas);
     GtkWidget *card = gtk_box_new(GTK_ORIENTATION_VERTICAL, 14);
     gtk_widget_add_css_class(card, "squircle-modal-inner");
@@ -540,6 +547,7 @@ void show_open_with_dialog(AppState *state, const char *file_path)
     GtkWidget *overlay = gtk_overlay_new();
     GtkWidget *bg_canvas = gtk_drawing_area_new();
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(bg_canvas), on_draw_modal_squircle, NULL, NULL);
+    blurred_theme_register_canvas(bg_canvas);
     gtk_overlay_set_child(GTK_OVERLAY(overlay), bg_canvas);
     GtkWidget *card = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
     gtk_widget_add_css_class(card, "squircle-modal-inner");
@@ -657,53 +665,51 @@ static void on_draw_modal_squircle(GtkDrawingArea *area, cairo_t *cr, int width,
     double h = (double)height - pad * 2.0;
     if (w <= 0 || h <= 0)
         return;
-    double r = MIN(42.0, MIN(w, h) * 0.18);
-    double n = 3.8;
+    const BlurredSharedTheme *bt = blurred_theme_get();
+    double r = MIN(bt->ry * 0.55, MIN(w, h) * 0.24);
+    double n = bt->exponent_n;
     cairo_save(cr);
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
     cairo_restore(cr);
-    /* 1. Soft Ambient Drop Shadow */
+    if (bt->shadow_enabled && bt->shadow_intensity > 0.01)
     for (int i = 10; i >= 1; i--)
     {
         double spread = (double)i * 0.85;
         double y_off = (double)i * 0.35;
-        double alpha = 0.012 + (10.0 - i) * 0.003;
+        double alpha = ((bt->is_light ? 0.006 : 0.012) + (10.0 - i) * (bt->is_light ? 0.0015 : 0.003)) * bt->shadow_intensity;
         cairo_save(cr);
-        build_modal_squircle_path(cr,
-                                  x - spread,
-                                  y - spread + y_off,
-                                  w + spread * 2.0,
-                                  h + spread * 2.0,
-                                  r + spread,
-                                  n);
+        build_modal_squircle_path(cr, x - spread, y - spread + y_off, w + spread * 2.0, h + spread * 2.0, r + spread, n);
         cairo_set_source_rgba(cr, 8.0 / 255.0, 10.0 / 255.0, 16.0 / 255.0, alpha);
         cairo_fill(cr);
         cairo_restore(cr);
     }
-    /* 2. Dark Slate-Charcoal Fill */
     build_modal_squircle_path(cr, x + 1.0, y + 1.0, w - 2.0, h - 2.0, r, n);
     cairo_pattern_t *bg_grad = cairo_pattern_create_linear(x, y, x, y + h);
-    cairo_pattern_add_color_stop_rgba(bg_grad, 0.00, 46.0 / 255.0, 52.0 / 255.0, 67.0 / 255.0, 0.96);
-    cairo_pattern_add_color_stop_rgba(bg_grad, 0.55, 30.0 / 255.0, 34.0 / 255.0, 45.0 / 255.0, 0.96);
-    cairo_pattern_add_color_stop_rgba(bg_grad, 1.00, 22.0 / 255.0, 26.0 / 255.0, 35.0 / 255.0, 0.97);
+    if (bt->is_light) {
+        cairo_pattern_add_color_stop_rgba(bg_grad, 0.00, 250.0 / 255.0, 252.0 / 255.0, 255.0 / 255.0, 0.97);
+        cairo_pattern_add_color_stop_rgba(bg_grad, 0.55, 240.0 / 255.0, 244.0 / 255.0, 250.0 / 255.0, 0.97);
+        cairo_pattern_add_color_stop_rgba(bg_grad, 1.00, 230.0 / 255.0, 236.0 / 255.0, 245.0 / 255.0, 0.98);
+    } else {
+        cairo_pattern_add_color_stop_rgba(bg_grad, 0.00, 46.0 / 255.0, 52.0 / 255.0, 67.0 / 255.0, 0.96);
+        cairo_pattern_add_color_stop_rgba(bg_grad, 0.55, 30.0 / 255.0, 34.0 / 255.0, 45.0 / 255.0, 0.96);
+        cairo_pattern_add_color_stop_rgba(bg_grad, 1.00, 22.0 / 255.0, 26.0 / 255.0, 35.0 / 255.0, 0.97);
+    }
     cairo_set_source(cr, bg_grad);
     cairo_fill(cr);
     cairo_pattern_destroy(bg_grad);
-    /* 3. Subtle Inner Specular Glass Bevel */
     cairo_save(cr);
     build_modal_squircle_path(cr, x + 2.2, y + 2.2, w - 4.4, h - 4.4, r - 1.2, n);
-    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.16);
+    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, bt->is_light ? 0.65 : 0.16);
     cairo_set_line_width(cr, 1.2);
     cairo_stroke(cr);
     cairo_restore(cr);
-    /* 4. Signature 2px Warm Orange Gradient Rim */
     cairo_save(cr);
     build_modal_squircle_path(cr, x + 1.0, y + 1.0, w - 2.0, h - 2.0, r, n);
     cairo_pattern_t *rim_grad = cairo_pattern_create_linear(x, y, x + w, y + h);
-    cairo_pattern_add_color_stop_rgba(rim_grad, 0.0, 1.00, 0.72, 0.34, 0.92);
-    cairo_pattern_add_color_stop_rgba(rim_grad, 0.5, 1.00, 0.42, 0.00, 0.95);
-    cairo_pattern_add_color_stop_rgba(rim_grad, 1.0, 0.82, 0.25, 0.00, 0.90);
+    cairo_pattern_add_color_stop_rgba(rim_grad, 0.0, bt->accent_start.red, bt->accent_start.green, bt->accent_start.blue, 0.92);
+    cairo_pattern_add_color_stop_rgba(rim_grad, 0.5, bt->accent_mid.red, bt->accent_mid.green, bt->accent_mid.blue, 0.95);
+    cairo_pattern_add_color_stop_rgba(rim_grad, 1.0, bt->accent_end.red, bt->accent_end.green, bt->accent_end.blue, 0.90);
     cairo_set_source(cr, rim_grad);
     cairo_set_line_width(cr, 2.0);
     cairo_stroke(cr);
@@ -894,6 +900,7 @@ void show_properties_dialog(AppState *state, const char *path)
     GtkWidget *overlay = gtk_overlay_new();
     GtkWidget *bg_canvas = gtk_drawing_area_new();
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(bg_canvas), on_draw_modal_squircle, NULL, NULL);
+    blurred_theme_register_canvas(bg_canvas);
     gtk_overlay_set_child(GTK_OVERLAY(overlay), bg_canvas);
     GtkWidget *card = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
     gtk_widget_add_css_class(card, "squircle-modal-inner");
@@ -1090,6 +1097,7 @@ void show_settings_dialog(AppState *state)
     GtkWidget *overlay = gtk_overlay_new();
     GtkWidget *bg_canvas = gtk_drawing_area_new();
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(bg_canvas), on_draw_modal_squircle, NULL, NULL);
+    blurred_theme_register_canvas(bg_canvas);
     gtk_overlay_set_child(GTK_OVERLAY(overlay), bg_canvas);
     GtkWidget *card = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
     gtk_widget_add_css_class(card, "squircle-modal-inner");

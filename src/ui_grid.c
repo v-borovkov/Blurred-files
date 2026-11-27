@@ -283,6 +283,57 @@ static void on_bg_empty_trash_clicked(GtkButton *btn, gpointer user_data)
     empty_trash_completely((AppState *)user_data);
 }
 
+static gboolean deferred_apply_desktop_icons_cb(gpointer user_data)
+{
+    AppState *state = (AppState *)user_data;
+    if (state && state->current_path)
+    {
+        populate_directory(state, state->current_path);
+        if (state->window && GTK_IS_WINDOW(state->window))
+        {
+            gtk_widget_queue_draw(state->window);
+            GtkNative *nat = gtk_widget_get_native(state->window);
+            GdkSurface *surf = nat ? gtk_native_get_surface(nat) : NULL;
+            if (surf)
+                gdk_surface_queue_render(surf);
+        }
+    }
+    return G_SOURCE_REMOVE;
+}
+
+static void on_bg_toggle_desktop_icons_clicked(GtkButton *btn, gpointer user_data)
+{
+    AppState *state = (AppState *)user_data;
+    GtkWidget *popover = gtk_widget_get_ancestor(GTK_WIDGET(btn), GTK_TYPE_POPOVER);
+    if (popover)
+        gtk_popover_popdown(GTK_POPOVER(popover));
+    if (!state)
+        return;
+    state->hide_desktop_icons = !state->hide_desktop_icons;
+    save_app_settings(state);
+    g_idle_add(deferred_apply_desktop_icons_cb, state);
+}
+
+static void on_bg_change_wallpaper_clicked(GtkButton *btn, gpointer user_data)
+{
+    (void)user_data;
+    GtkWidget *popover = gtk_widget_get_ancestor(GTK_WIDGET(btn), GTK_TYPE_POPOVER);
+    if (popover)
+        gtk_popover_popdown(GTK_POPOVER(popover));
+    const char *argv[] = {"blurred_settings", "--page", "wallpaper", NULL};
+    g_spawn_async(NULL, (char **)argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
+}
+
+static void on_bg_desktop_settings_clicked(GtkButton *btn, gpointer user_data)
+{
+    (void)user_data;
+    GtkWidget *popover = gtk_widget_get_ancestor(GTK_WIDGET(btn), GTK_TYPE_POPOVER);
+    if (popover)
+        gtk_popover_popdown(GTK_POPOVER(popover));
+    const char *argv[] = {"blurred_settings", "--page", "appearance", NULL};
+    g_spawn_async(NULL, (char **)argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
+}
+
 static void on_grid_bg_right_clicked(GtkGestureClick *gesture, int n_press, double x, double y, gpointer user_data)
 {
     (void)gesture;
@@ -337,6 +388,23 @@ static void on_grid_bg_right_clicked(GtkGestureClick *gesture, int n_press, doub
         gtk_box_append(GTK_BOX(menu_box), btn_folder);
         gtk_box_append(GTK_BOX(menu_box), btn_file);
         gtk_box_append(GTK_BOX(menu_box), btn_term);
+        if (state->is_desktop_mode)
+        {
+            gtk_box_append(GTK_BOX(menu_box), gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
+            GtkWidget *btn_icons = gtk_button_new_with_label(
+                state->hide_desktop_icons ? "Show Desktop Icons" : "Hide Desktop Icons");
+            gtk_widget_add_css_class(btn_icons, "context-menu-btn");
+            g_signal_connect(btn_icons, "clicked", G_CALLBACK(on_bg_toggle_desktop_icons_clicked), state);
+            gtk_box_append(GTK_BOX(menu_box), btn_icons);
+            GtkWidget *btn_wp = gtk_button_new_with_label("Change Wallpaper...");
+            GtkWidget *btn_cfg = gtk_button_new_with_label("Desktop Settings");
+            gtk_widget_add_css_class(btn_wp, "context-menu-btn");
+            gtk_widget_add_css_class(btn_cfg, "context-menu-btn");
+            g_signal_connect(btn_wp, "clicked", G_CALLBACK(on_bg_change_wallpaper_clicked), state);
+            g_signal_connect(btn_cfg, "clicked", G_CALLBACK(on_bg_desktop_settings_clicked), state);
+            gtk_box_append(GTK_BOX(menu_box), btn_wp);
+            gtk_box_append(GTK_BOX(menu_box), btn_cfg);
+        }
     }
     gtk_popover_set_child(GTK_POPOVER(popover), menu_box);
     gtk_popover_popup(GTK_POPOVER(popover));

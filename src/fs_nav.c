@@ -409,6 +409,11 @@ void populate_directory(AppState *state, const char *path) {
         gtk_flow_box_remove(GTK_FLOW_BOX(state->flowbox), child);
     }
 
+    if (state->is_desktop_mode && state->hide_desktop_icons) {
+        update_status_bar(state);
+        return;
+    }
+
     GFile *dir = g_file_new_for_path(path);
     GError *error = NULL;
 

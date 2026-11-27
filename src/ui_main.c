@@ -534,6 +534,7 @@ void activate_app_with_path(GtkApplication *app, const char *initial_path)
     GtkWidget *bg_canvas = gtk_drawing_area_new();
     gtk_widget_set_can_target(bg_canvas, TRUE);
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(bg_canvas), on_draw_squircle_bg, NULL, NULL);
+    blurred_theme_register_canvas(bg_canvas);
     gtk_overlay_set_child(GTK_OVERLAY(overlay), bg_canvas);
     GtkWidget *main_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_add_css_class(main_hbox, "window-inner");

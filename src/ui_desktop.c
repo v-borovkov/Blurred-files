@@ -13,6 +13,8 @@ static gboolean reload_desktop_settings_cb(gpointer user_data)
         load_app_settings(state);
         state->is_list_view = FALSE; /* Desktop always stays in icon grid mode */
         populate_directory(state, state->current_path);
+        for (GtkWidget *c = gtk_widget_get_first_child(state->flowbox); c != NULL; c = gtk_widget_get_next_sibling(c)) { gtk_widget_set_visible(c, !state->hide_desktop_icons); }
+    gtk_widget_set_can_target(state->flowbox, !state->hide_desktop_icons);
     }
     return G_SOURCE_REMOVE;
 }
@@ -40,8 +42,16 @@ static void on_settings_file_changed(GFileMonitor *monitor,
     }
 }
 
+static void on_draw_desktop_clear_anchor(GtkDrawingArea *area, cairo_t *cr, int w, int h, gpointer data)
+{
+    (void)area; (void)w; (void)h; (void)data;
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+}
+
 void activate_desktop_mode(GtkApplication *app, gpointer user_data)
 {
+    blurred_theme_init();
     (void)user_data;
 
     GtkCssProvider *provider = gtk_css_provider_new();
@@ -106,6 +116,13 @@ void activate_desktop_mode(GtkApplication *app, gpointer user_data)
     GtkWidget *grid_overlay = build_file_grid_overlay(state);
     gtk_widget_add_css_class(grid_overlay, "desktop-grid-overlay");
     gtk_widget_add_css_class(state->flowbox, "desktop-files-grid");
+    GtkWidget *clear_anchor = gtk_drawing_area_new();
+    gtk_widget_set_size_request(clear_anchor, 1, 1);
+    gtk_widget_set_halign(clear_anchor, GTK_ALIGN_START);
+    gtk_widget_set_valign(clear_anchor, GTK_ALIGN_START);
+    gtk_widget_set_can_target(clear_anchor, FALSE);
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(clear_anchor), on_draw_desktop_clear_anchor, NULL, NULL);
+    gtk_overlay_add_overlay(GTK_OVERLAY(grid_overlay), clear_anchor);
     gtk_window_set_child(GTK_WINDOW(window), grid_overlay);
 
     /* Live-sync with ~/.config/blurred_files/settings.ini whenever Preferences change */
@@ -133,6 +150,8 @@ void activate_desktop_mode(GtkApplication *app, gpointer user_data)
     }
 
     navigate_to_path(state, desktop_dir, FALSE);
+    for (GtkWidget *c = gtk_widget_get_first_child(state->flowbox); c != NULL; c = gtk_widget_get_next_sibling(c)) { gtk_widget_set_visible(c, !state->hide_desktop_icons); }
+    gtk_widget_set_can_target(state->flowbox, !state->hide_desktop_icons);
     g_free(desktop_dir);
 
     gtk_window_present(GTK_WINDOW(window));

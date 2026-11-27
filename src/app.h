@@ -3,6 +3,7 @@
 
 #include <gtk/gtk.h>
 #include <gio/gio.h>
+#include "blurred_theme.h"
 
 #ifndef DATADIR
 #define DATADIR "/usr/local/share/blurred_files"
@@ -93,6 +94,7 @@ typedef struct
 
     /* View, Sort & Settings state */
     gboolean is_desktop_mode;
+    gboolean hide_desktop_icons;
     gboolean is_list_view;
     gboolean show_hidden;
     gboolean enable_thumbnails;
