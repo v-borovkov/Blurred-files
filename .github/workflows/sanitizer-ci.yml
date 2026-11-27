@@ -26,7 +26,7 @@ jobs:
             build-essential \
             pkg-config \
             libgtk-4-dev \
-            libgtk4-layer-shell-dev \
+            \
             zip \
             unzip \
             tar \
@@ -40,6 +40,15 @@ jobs:
             --suppress=missingIncludeSystem \
             --suppress=unknownMacro \
             src/
+
+      - name: Build & install gtk4-layer-shell from source
+        run: |
+          sudo apt-get install -y --no-install-recommends git meson ninja-build libwayland-dev wayland-protocols
+          git clone --depth 1 https://github.com /tmp/gtk4-layer-shell
+          meson setup /tmp/gtk4-layer-shell/build /tmp/gtk4-layer-shell --prefix=/usr -Ddocs=false -Dtests=false -Dintrospection=false
+          ninja -C /tmp/gtk4-layer-shell/build
+          sudo ninja -C /tmp/gtk4-layer-shell/build install
+          sudo ldconfig
 
       - name: Build with ASan + UBSan
         run: |
@@ -69,7 +78,7 @@ jobs:
             build-essential \
             pkg-config \
             libgtk-4-dev \
-            libgtk4-layer-shell-dev \
+            \
             dpkg-dev
 
       - name: Build .deb Package
