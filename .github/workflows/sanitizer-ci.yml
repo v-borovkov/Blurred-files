@@ -48,7 +48,7 @@ jobs:
 
       - name: Build & install gtk4-layer-shell from source
         run: |
-          sudo apt-get install -y --no-install-recommends meson ninja-build libwayland-dev wayland-protocols
+          sudo apt-get install -y --no-install-recommends meson ninja-build valac libwayland-dev wayland-protocols
           meson setup gtk4-layer-shell/build gtk4-layer-shell --prefix=/usr -Ddocs=false -Dexamples=false -Dtests=false -Dintrospection=false
           ninja -C gtk4-layer-shell/build
           sudo ninja -C gtk4-layer-shell/build install
