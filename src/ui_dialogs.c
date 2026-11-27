@@ -719,10 +719,16 @@ static void on_draw_modal_squircle(GtkDrawingArea *area, cairo_t *cr, int width,
 /* --- Squircle Properties Dialog --- */
 typedef struct
 {
+    AppState *state;
     GtkWidget *dialog;
+    GtkWidget *hero_stack;
+    GtkWidget *hero_name_lbl;
+    GtkWidget *hero_name_entry;
     GtkWidget *size_lbl;
     GCancellable *cancellable;
     char *target_path;
+    gboolean is_dir;
+    gboolean renaming;
 } PropertiesDialogData;
 typedef struct
 {
@@ -813,6 +819,117 @@ static void on_properties_close_clicked(GtkButton *btn, gpointer user_data)
     (void)btn;
     close_properties_cleanly((PropertiesDialogData *)user_data);
 }
+static void cancel_properties_inline_rename(PropertiesDialogData *pdd)
+{
+    if (!pdd || !pdd->renaming)
+        return;
+    pdd->renaming = FALSE;
+    if (pdd->hero_stack && GTK_IS_STACK(pdd->hero_stack))
+        gtk_stack_set_visible_child_name(GTK_STACK(pdd->hero_stack), "label");
+}
+
+static void commit_properties_inline_rename(PropertiesDialogData *pdd)
+{
+    if (!pdd || !pdd->renaming)
+        return;
+    pdd->renaming = FALSE;
+
+    const char *raw_name = gtk_editable_get_text(GTK_EDITABLE(pdd->hero_name_entry));
+    char *new_name = raw_name ? g_strstrip(g_strdup(raw_name)) : NULL;
+
+    if (new_name && *new_name != '\0' && !strchr(new_name, '/') && pdd->target_path)
+    {
+        char *parent_dir = g_path_get_dirname(pdd->target_path);
+        char *new_path = g_build_filename(parent_dir, new_name, NULL);
+
+        if (g_strcmp0(pdd->target_path, new_path) != 0)
+        {
+            GFile *src = g_file_new_for_path(pdd->target_path);
+            GFile *dst = g_file_new_for_path(new_path);
+            GError *err = NULL;
+
+            if (g_file_move(src, dst, G_FILE_COPY_NONE, NULL, NULL, NULL, &err))
+            {
+                if (pdd->state)
+                {
+                    record_undo_action(pdd->state,
+                                       UNDO_MOVE_BACK,
+                                       g_list_append(NULL, g_strdup(pdd->target_path)),
+                                       g_list_append(NULL, g_strdup(new_path)));
+                    if (pdd->state->current_path)
+                        populate_directory(pdd->state, pdd->state->current_path);
+                }
+                g_free(pdd->target_path);
+                pdd->target_path = g_strdup(new_path);
+                if (pdd->hero_name_lbl && GTK_IS_LABEL(pdd->hero_name_lbl))
+                    gtk_label_set_text(GTK_LABEL(pdd->hero_name_lbl), new_name);
+            }
+            else if (err)
+            {
+                g_warning("Properties inline rename failed: %s", err->message);
+                g_error_free(err);
+            }
+
+            g_object_unref(src);
+            g_object_unref(dst);
+        }
+
+        g_free(new_path);
+        g_free(parent_dir);
+    }
+
+    g_free(new_name);
+    if (pdd->hero_stack && GTK_IS_STACK(pdd->hero_stack))
+        gtk_stack_set_visible_child_name(GTK_STACK(pdd->hero_stack), "label");
+}
+
+static void on_prop_rename_entry_activate(GtkEntry *entry, gpointer user_data)
+{
+    (void)entry;
+    commit_properties_inline_rename((PropertiesDialogData *)user_data);
+}
+
+static void on_prop_rename_focus_leave(GtkEventControllerFocus *ctrl, gpointer user_data)
+{
+    (void)ctrl;
+    commit_properties_inline_rename((PropertiesDialogData *)user_data);
+}
+
+static void on_prop_hero_name_double_clicked(GtkGestureClick *gesture,
+                                             int n_press,
+                                             double x,
+                                             double y,
+                                             gpointer user_data)
+{
+    (void)gesture;
+    (void)x;
+    (void)y;
+    if (n_press != 2)
+        return;
+
+    PropertiesDialogData *pdd = (PropertiesDialogData *)user_data;
+    if (!pdd || pdd->renaming || !pdd->target_path)
+        return;
+
+    char *cur_name = g_path_get_basename(pdd->target_path);
+    pdd->renaming = TRUE;
+    gtk_editable_set_text(GTK_EDITABLE(pdd->hero_name_entry), cur_name);
+    gtk_stack_set_visible_child_name(GTK_STACK(pdd->hero_stack), "entry");
+    gtk_widget_grab_focus(pdd->hero_name_entry);
+
+    const char *dot = strrchr(cur_name, '.');
+    if (dot && dot != cur_name && !pdd->is_dir)
+    {
+        glong stem_chars = g_utf8_pointer_to_offset(cur_name, dot);
+        gtk_editable_select_region(GTK_EDITABLE(pdd->hero_name_entry), 0, (int)stem_chars);
+    }
+    else
+    {
+        gtk_editable_select_region(GTK_EDITABLE(pdd->hero_name_entry), 0, -1);
+    }
+    g_free(cur_name);
+}
+
 static gboolean on_properties_key_pressed(GtkEventControllerKey *ctrl,
                                           guint keyval,
                                           guint keycode,
@@ -824,7 +941,13 @@ static gboolean on_properties_key_pressed(GtkEventControllerKey *ctrl,
     (void)mods;
     if (keyval == GDK_KEY_Escape)
     {
-        close_properties_cleanly((PropertiesDialogData *)user_data);
+        PropertiesDialogData *pdd = (PropertiesDialogData *)user_data;
+        if (pdd && pdd->renaming)
+        {
+            cancel_properties_inline_rename(pdd);
+            return TRUE;
+        }
+        close_properties_cleanly(pdd);
         return TRUE;
     }
     return FALSE;
@@ -892,8 +1015,10 @@ void show_properties_dialog(AppState *state, const char *path)
     gtk_window_set_default_size(GTK_WINDOW(dialog), 430, 415);
     gtk_widget_add_css_class(dialog, "settings-modal-window");
     PropertiesDialogData *pdd = g_new0(PropertiesDialogData, 1);
+    pdd->state = state;
     pdd->dialog = dialog;
     pdd->target_path = g_strdup(path);
+    pdd->is_dir = is_dir;
     GtkEventController *key_ctrl = gtk_event_controller_key_new();
     g_signal_connect(key_ctrl, "key-pressed", G_CALLBACK(on_properties_key_pressed), pdd);
     gtk_widget_add_controller(dialog, key_ctrl);
@@ -933,12 +1058,42 @@ void show_properties_dialog(AppState *state, const char *path)
                                ? gtk_image_new_from_gicon(gicon)
                                : gtk_image_new_from_icon_name(is_dir ? "folder" : "text-x-generic");
     gtk_image_set_pixel_size(GTK_IMAGE(hero_icon), 44);
+    GtkWidget *hero_stack = gtk_stack_new();
+    gtk_stack_set_transition_type(GTK_STACK(hero_stack), GTK_STACK_TRANSITION_TYPE_CROSSFADE);
+    gtk_stack_set_transition_duration(GTK_STACK(hero_stack), 110);
+    gtk_widget_set_hexpand(hero_stack, TRUE);
+    gtk_widget_set_valign(hero_stack, GTK_ALIGN_CENTER);
+
     GtkWidget *hero_name = gtk_label_new(name);
     gtk_widget_add_css_class(hero_name, "prop-hero-name");
     gtk_widget_set_halign(hero_name, GTK_ALIGN_START);
     gtk_label_set_wrap(GTK_LABEL(hero_name), TRUE);
+    gtk_widget_set_tooltip_text(hero_name, "Double-click to rename");
+
+    GtkGesture *dbl_click = gtk_gesture_click_new();
+    gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(dbl_click), GDK_BUTTON_PRIMARY);
+    g_signal_connect(dbl_click, "pressed", G_CALLBACK(on_prop_hero_name_double_clicked), pdd);
+    gtk_widget_add_controller(hero_name, GTK_EVENT_CONTROLLER(dbl_click));
+
+    GtkWidget *hero_entry = gtk_entry_new();
+    gtk_widget_add_css_class(hero_entry, "modal-text-entry");
+    gtk_widget_set_hexpand(hero_entry, TRUE);
+    g_signal_connect(hero_entry, "activate", G_CALLBACK(on_prop_rename_entry_activate), pdd);
+
+    GtkEventController *focus_ctrl = gtk_event_controller_focus_new();
+    g_signal_connect(focus_ctrl, "leave", G_CALLBACK(on_prop_rename_focus_leave), pdd);
+    gtk_widget_add_controller(hero_entry, focus_ctrl);
+
+    gtk_stack_add_named(GTK_STACK(hero_stack), hero_name, "label");
+    gtk_stack_add_named(GTK_STACK(hero_stack), hero_entry, "entry");
+    gtk_stack_set_visible_child_name(GTK_STACK(hero_stack), "label");
+
+    pdd->hero_stack = hero_stack;
+    pdd->hero_name_lbl = hero_name;
+    pdd->hero_name_entry = hero_entry;
+
     gtk_box_append(GTK_BOX(hero), hero_icon);
-    gtk_box_append(GTK_BOX(hero), hero_name);
+    gtk_box_append(GTK_BOX(hero), hero_stack);
     gtk_box_append(GTK_BOX(card), hero);
     add_prop_row(card, "Type", type_desc);
     add_prop_row(card, "Location", parent_dir);
