@@ -1017,12 +1017,19 @@ button.sidebar-btn:hover label {
     border-color: @accent_mid;
 }
 
-button.sidebar-btn.active,
-button.sidebar-btn.active image,
-button.sidebar-btn.active label {
+button.sidebar-btn.active {
     color: @accent_mid;
     border-color: @accent_mid;
     background-image: linear-gradient(to bottom, @accent_tint_strong 0%, @accent_tint_soft 100%);
+}
+
+button.sidebar-btn.active image,
+button.sidebar-btn.active label {
+    color: @accent_mid;
+    background: none;
+    background-color: transparent;
+    background-image: none;
+    border: none;
 }
 
 button.sidebar-btn.drop-target-hover {
@@ -1201,12 +1208,19 @@ button.sidebar-btn:hover label {
     border-color: @accent_mid;
 }
 
-button.sidebar-btn.active,
-button.sidebar-btn.active image,
-button.sidebar-btn.active label {
+button.sidebar-btn.active {
     color: @accent_mid;
     border-color: @accent_mid;
     background-image: linear-gradient(to bottom, @accent_tint_strong 0%, @accent_tint_soft 100%);
+}
+
+button.sidebar-btn.active image,
+button.sidebar-btn.active label {
+    color: @accent_mid;
+    background: none;
+    background-color: transparent;
+    background-image: none;
+    border: none;
 }
 
 button.sidebar-btn.drop-target-hover {
