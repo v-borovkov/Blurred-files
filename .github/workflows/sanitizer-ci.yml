@@ -41,14 +41,19 @@ jobs:
             --suppress=unknownMacro \
             src/
 
+      - uses: actions/checkout@v4
+        with:
+          repository: wmww/gtk4-layer-shell
+          path: gtk4-layer-shell
+
       - name: Build & install gtk4-layer-shell from source
         run: |
-          sudo apt-get install -y --no-install-recommends git meson ninja-build libwayland-dev wayland-protocols
-          git clone --depth 1 https://github.com /tmp/gtk4-layer-shell
-          meson setup /tmp/gtk4-layer-shell/build /tmp/gtk4-layer-shell --prefix=/usr -Ddocs=false -Dtests=false -Dintrospection=false
-          ninja -C /tmp/gtk4-layer-shell/build
-          sudo ninja -C /tmp/gtk4-layer-shell/build install
+          sudo apt-get install -y --no-install-recommends meson ninja-build libwayland-dev wayland-protocols
+          meson setup gtk4-layer-shell/build gtk4-layer-shell --prefix=/usr -Ddocs=false -Dtests=false -Dintrospection=false
+          ninja -C gtk4-layer-shell/build
+          sudo ninja -C gtk4-layer-shell/build install
           sudo ldconfig
+          rm -rf gtk4-layer-shell
 
       - name: Build with ASan + UBSan
         run: |
